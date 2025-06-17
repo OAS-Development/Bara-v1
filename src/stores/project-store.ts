@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 import { Database } from '@/types/database.types'
 
 type Project = Database['public']['Tables']['projects']['Row']
@@ -35,13 +35,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   fetchProjects: async () => {
     set({ loading: true, error: null })
     
-    const userResult = await api.query(
-      () => api.client.auth.getUser(),
-      { showToast: false }
-    )
+    const userResult = await getAuthUser()
 
-    if (isApiError(userResult) || !userResult.data.user) {
-      set({ loading: false, error: { message: 'No authenticated user' } })
+    if (!userResult.data || !userResult.data.user) {
+      set({ loading: false, error: userResult.error || { message: 'No authenticated user' } })
       return
     }
 
@@ -69,13 +66,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   createProject: async (project) => {
     set({ error: null })
     
-    const userResult = await api.query(
-      () => api.client.auth.getUser(),
-      { showToast: false }
-    )
+    const userResult = await getAuthUser()
 
-    if (isApiError(userResult) || !userResult.data.user) {
-      set({ error: { message: 'No authenticated user' } })
+    if (!userResult.data || !userResult.data.user) {
+      set({ error: userResult.error || { message: 'No authenticated user' } })
       return null
     }
 
@@ -96,11 +90,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       return null
     }
 
-    const projects = [...get().projects, result.data]
+    const newProject = result.data
+    if (!newProject) {
+      return null
+    }
+
+    const projects = [...get().projects, newProject]
     const projectsTree = get().buildProjectTree(projects)
     set({ projects, projectsTree })
 
-    return result.data
+    return newProject
   },
 
   updateProject: async (id, update) => {
@@ -174,7 +173,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     // Sort children recursively
     const sortProjects = (projects: ProjectWithChildren[]) => {
       projects.sort((a, b) => {
-        const sortDiff = (a.position ?? 0) - (b.position ?? 0)
+        const sortDiff = ((a as any).position ?? 0) - ((b as any).position ?? 0)
         if (sortDiff !== 0) return sortDiff
         return (a.name ?? '').localeCompare(b.name ?? '')
       })

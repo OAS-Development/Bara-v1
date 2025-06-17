@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 import { Database } from '@/types/database.types'
 
 type Perspective = Database['public']['Tables']['perspectives']['Row']
@@ -27,13 +27,10 @@ export const usePerspectiveStore = create<PerspectiveState>((set, get) => ({
   fetchPerspectives: async () => {
     set({ loading: true, error: null })
     
-    const userResult = await api.query(
-      () => api.client.auth.getUser(),
-      { showToast: false }
-    )
+    const userResult = await getAuthUser()
 
-    if (isApiError(userResult) || !userResult.data.user) {
-      set({ loading: false, error: { message: 'No authenticated user' } })
+    if (!userResult.data || !userResult.data.user) {
+      set({ loading: false, error: userResult.error || { message: 'No authenticated user' } })
       return
     }
 
@@ -57,13 +54,10 @@ export const usePerspectiveStore = create<PerspectiveState>((set, get) => ({
   createPerspective: async (perspective) => {
     set({ error: null })
     
-    const userResult = await api.query(
-      () => api.client.auth.getUser(),
-      { showToast: false }
-    )
+    const userResult = await getAuthUser()
 
-    if (isApiError(userResult) || !userResult.data.user) {
-      set({ error: { message: 'No authenticated user' } })
+    if (!userResult.data || !userResult.data.user) {
+      set({ error: userResult.error || { message: 'No authenticated user' } })
       return null
     }
 
@@ -84,8 +78,12 @@ export const usePerspectiveStore = create<PerspectiveState>((set, get) => ({
       return null
     }
 
-    set((state) => ({ perspectives: [...state.perspectives, result.data] }))
-    return result.data
+    const newPerspective = result.data
+    if (newPerspective) {
+      set((state) => ({ perspectives: [...state.perspectives, newPerspective] }))
+      return newPerspective
+    }
+    return null
   },
 
   updatePerspective: async (id, update) => {

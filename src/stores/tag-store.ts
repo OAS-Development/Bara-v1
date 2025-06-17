@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 import { Database } from '@/types/database.types'
 
 type Tag = Database['public']['Tables']['tags']['Row']
@@ -34,13 +34,10 @@ export const useTagStore = create<TagState>((set, get) => ({
   fetchTags: async () => {
     set({ loading: true, error: null })
     
-    const userResult = await api.query(
-      () => api.client.auth.getUser(),
-      { showToast: false }
-    )
+    const userResult = await getAuthUser()
 
-    if (isApiError(userResult) || !userResult.data.user) {
-      set({ loading: false, error: { message: 'No authenticated user' } })
+    if (!userResult.data || !userResult.data.user) {
+      set({ loading: false, error: userResult.error || { message: 'No authenticated user' } })
       return
     }
 
@@ -68,13 +65,10 @@ export const useTagStore = create<TagState>((set, get) => ({
   createTag: async (tag) => {
     set({ error: null })
     
-    const userResult = await api.query(
-      () => api.client.auth.getUser(),
-      { showToast: false }
-    )
+    const userResult = await getAuthUser()
 
-    if (isApiError(userResult) || !userResult.data.user) {
-      set({ error: { message: 'No authenticated user' } })
+    if (!userResult.data || !userResult.data.user) {
+      set({ error: userResult.error || { message: 'No authenticated user' } })
       return null
     }
 
@@ -95,11 +89,16 @@ export const useTagStore = create<TagState>((set, get) => ({
       return null
     }
 
-    const tags = [...get().tags, result.data]
+    const newTag = result.data
+    if (!newTag) {
+      return null
+    }
+
+    const tags = [...get().tags, newTag]
     const tagsTree = get().buildTagTree(tags)
     set({ tags, tagsTree })
 
-    return result.data
+    return newTag
   },
 
   updateTag: async (id, update) => {
@@ -173,7 +172,7 @@ export const useTagStore = create<TagState>((set, get) => ({
     // Sort children recursively
     const sortTags = (tags: TagWithChildren[]) => {
       tags.sort((a, b) => {
-        const posDiff = (a.position ?? 0) - (b.position ?? 0)
+        const posDiff = ((a as any).position ?? 0) - ((b as any).position ?? 0)
         if (posDiff !== 0) return posDiff
         return (a.name ?? '').localeCompare(b.name ?? '')
       })

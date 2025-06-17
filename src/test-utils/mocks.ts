@@ -34,6 +34,9 @@ export const mockProject: Project = {
   parent_id: null,
   status: 'active',
   order: 0,
+  type: 'parallel',
+  review_interval_days: null,
+  last_reviewed_at: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString()
 }

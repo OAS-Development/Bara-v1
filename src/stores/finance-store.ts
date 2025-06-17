@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 import type { Database } from '@/types/database.types'
 
 export type FinancialAccount = Database['public']['Tables']['financial_accounts']['Row']
@@ -75,10 +75,10 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       addAccount: async (account) => {
         set({ loading: true, error: null })
         
-        const { data: userData, error: userError } = await api.client.auth.getUser()
+        const userResult = await getAuthUser()
 
-        if (userError || !userData.user) {
-          set({ loading: false, error: { message: 'Not authenticated' } })
+        if (!userResult.data || !userResult.data.user) {
+          set({ loading: false, error: userResult.error || { message: 'Not authenticated' } })
           return
         }
 
@@ -87,7 +87,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
             .from('financial_accounts')
             .insert({
               ...account,
-              user_id: userData.user.id
+              user_id: userResult.data.user.id
             })
             .select()
             .single(),
@@ -317,10 +317,10 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
       addBudget: async (budget) => {
         set({ loading: true, error: null })
         
-        const { data: userData, error: userError } = await api.client.auth.getUser()
+        const userResult = await getAuthUser()
 
-        if (userError || !userData.user) {
-          set({ loading: false, error: { message: 'Not authenticated' } })
+        if (!userResult.data || !userResult.data.user) {
+          set({ loading: false, error: userResult.error || { message: 'Not authenticated' } })
           return
         }
 
@@ -329,7 +329,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
             .from('budgets')
             .insert({
               ...budget,
-              user_id: userData.user.id
+              user_id: userResult.data.user.id
             })
             .select()
             .single(),

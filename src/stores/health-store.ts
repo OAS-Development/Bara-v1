@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 
 export type MetricType =
   | 'weight'
@@ -84,13 +84,10 @@ export const useHealthStore = create<HealthStore>()(
       addMetric: async (metric) => {
         set({ loading: true, error: null })
         
-        const userResult = await api.query(
-          () => api.client.auth.getUser(),
-          { showToast: false }
-        )
+        const userResult = await getAuthUser()
 
-        if (isApiError(userResult) || !userResult.data.user) {
-          set({ loading: false, error: { message: 'Not authenticated' } })
+        if (!userResult.data || !userResult.data.user) {
+          set({ loading: false, error: userResult.error || { message: 'Not authenticated' } })
           return
         }
 
@@ -114,10 +111,13 @@ export const useHealthStore = create<HealthStore>()(
           return
         }
 
-        set((state) => ({
-          metrics: [result.data, ...state.metrics],
-          loading: false
-        }))
+        if (result.data) {
+          const newMetric = result.data
+          set((state) => ({
+            metrics: [newMetric, ...state.metrics],
+            loading: false
+          }))
+        }
       },
 
       updateMetric: async (id, updates) => {
@@ -141,10 +141,13 @@ export const useHealthStore = create<HealthStore>()(
           return
         }
 
-        set((state) => ({
-          metrics: state.metrics.map((m) => (m.id === id ? result.data : m)),
-          loading: false
-        }))
+        if (result.data) {
+          const updatedMetric = result.data
+          set((state) => ({
+            metrics: state.metrics.map((m) => (m.id === id ? updatedMetric : m)),
+            loading: false
+          }))
+        }
       },
 
       deleteMetric: async (id) => {

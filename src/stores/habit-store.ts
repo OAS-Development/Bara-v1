@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 
 export interface Habit {
   id: string
@@ -103,13 +103,10 @@ export const useHabitStore = create<HabitStore>()(
       addHabit: async (habit) => {
         set({ loading: true, error: null })
         
-        const userResult = await api.query(
-          () => api.client.auth.getUser(),
-          { showToast: false }
-        )
+        const userResult = await getAuthUser()
 
-        if (isApiError(userResult) || !userResult.data.user) {
-          set({ loading: false, error: { message: 'Not authenticated' } })
+        if (!userResult.data || !userResult.data.user) {
+          set({ loading: false, error: userResult.error || { message: 'Not authenticated' } })
           return
         }
 
@@ -133,10 +130,13 @@ export const useHabitStore = create<HabitStore>()(
           return
         }
 
-        set((state) => ({
-          habits: [result.data, ...state.habits],
-          loading: false
-        }))
+        if (result.data) {
+          const newHabit = result.data
+          set((state) => ({
+            habits: [newHabit, ...state.habits],
+            loading: false
+          }))
+        }
       },
 
       updateHabit: async (id, updates) => {
@@ -163,10 +163,13 @@ export const useHabitStore = create<HabitStore>()(
           return
         }
 
-        set((state) => ({
-          habits: state.habits.map((h) => (h.id === id ? result.data : h)),
-          loading: false
-        }))
+        if (result.data) {
+          const updatedHabit = result.data
+          set((state) => ({
+            habits: state.habits.map((h) => (h.id === id ? updatedHabit : h)),
+            loading: false
+          }))
+        }
       },
 
       deleteHabit: async (id) => {
@@ -222,10 +225,13 @@ export const useHabitStore = create<HabitStore>()(
           return
         }
 
-        set((state) => ({
-          completions: [result.data, ...state.completions],
-          loading: false
-        }))
+        if (result.data) {
+          const newCompletion = result.data
+          set((state) => ({
+            completions: [newCompletion, ...state.completions],
+            loading: false
+          }))
+        }
       },
 
       removeCompletion: async (completionId) => {

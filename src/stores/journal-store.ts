@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 import { JournalEncryption } from '@/lib/encryption'
 
 export interface JournalEntry {
@@ -125,13 +125,10 @@ export const useJournalStore = create<JournalStore>()(
       addEntry: async (entry) => {
         set({ loading: true, error: null })
         
-        const userResult = await api.query(
-          () => api.client.auth.getUser(),
-          { showToast: false }
-        )
+        const userResult = await getAuthUser()
 
-        if (isApiError(userResult) || !userResult.data.user) {
-          set({ loading: false, error: { message: 'Not authenticated' } })
+        if (!userResult.data || !userResult.data.user) {
+          set({ loading: false, error: userResult.error || { message: 'Not authenticated' } })
           return
         }
 
@@ -170,13 +167,16 @@ export const useJournalStore = create<JournalStore>()(
             return
           }
 
-          // Cache decrypted content
-          get().decryptedContent.set(result.data.id, entry.content)
+          if (result.data) {
+            const newEntry = result.data as JournalEntry
+            // Cache decrypted content
+            get().decryptedContent.set(newEntry.id, entry.content)
 
-          set((state) => ({
-            entries: [result.data, ...state.entries],
-            loading: false
-          }))
+            set((state) => ({
+              entries: [newEntry, ...state.entries],
+              loading: false
+            }))
+          }
         } catch (error) {
           set({ loading: false, error: { message: (error as Error).message } })
         }
@@ -229,10 +229,13 @@ export const useJournalStore = create<JournalStore>()(
             return
           }
 
-          set((state) => ({
-            entries: state.entries.map((e) => (e.id === id ? result.data : e)),
-            loading: false
-          }))
+          if (result.data) {
+            const updatedEntry = result.data as JournalEntry
+            set((state) => ({
+              entries: state.entries.map((e) => (e.id === id ? updatedEntry : e)),
+              loading: false
+            }))
+          }
         } catch (error) {
           set({ loading: false, error: { message: (error as Error).message } })
         }

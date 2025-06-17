@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 import type { Database } from '@/types/database.types'
 
 type Task = Database['public']['Tables']['tasks']['Row']
@@ -95,13 +95,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   createTask: async (taskData) => {
     set({ error: null })
     
-    const userResult = await api.query(
-      () => api.client.auth.getUser(),
-      { showToast: false }
-    )
+    const userResult = await getAuthUser()
 
-    if (isApiError(userResult) || !userResult.data.user) {
-      set({ error: { message: 'No authenticated user' } })
+    if (!userResult.data || !userResult.data.user) {
+      set({ error: userResult.error || { message: 'No authenticated user' } })
       return
     }
 
@@ -128,7 +125,11 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       return
     }
 
-    const task = taskResult.data
+    const task = taskResult.data as Task | null
+    if (!task) {
+      set({ error: { message: 'Failed to create task' } })
+      return
+    }
 
     // Add tags if provided
     if (tagIds && tagIds.length > 0) {
