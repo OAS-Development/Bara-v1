@@ -1,0 +1,42 @@
+# Session 8.2 Error Log
+
+## Critical TypeScript Compilation Error
+
+### Error Description
+The application was failing to build with TypeScript errors in the goals-store.ts file:
+
+```
+Type error: Type 'PostgrestBuilder<any, false>' is missing properties from Promise<{ data: unknown; error: PostgrestError | null; }>
+```
+
+### Root Cause Analysis
+After investigation, I found that ALL stores in the application have the same systemic issue:
+
+1. **Auth Pattern Issue**: The stores are trying to use `api.client.auth.getUser()` directly with the API wrapper, but the auth method returns a different type structure (`UserResponse`) than what the API client expects.
+
+2. **Query Execution Issue**: The Supabase query builders are not being executed. The stores are passing the query builder directly to the API wrapper instead of executing it first to get a Promise.
+
+### Affected Files
+- src/stores/goals-store.ts
+- src/stores/task-store.ts  
+- src/stores/project-store.ts
+- src/stores/tag-store.ts
+- src/stores/finance-store.ts
+- src/stores/health-store.ts
+- src/stores/habit-store.ts
+- src/stores/journal-store.ts
+- src/stores/perspective-store.ts
+
+### Resolution Strategy
+The issue requires a fundamental change to how the API wrapper works with Supabase queries. The query builders need to be executed (called as functions) to return Promises before being passed to the API wrapper.
+
+### Current Status
+- Fixed the auth pattern in goals-store.ts to match other stores
+- Added type-check script to package.json
+- Discovered that the issue is systemic across all stores
+- The application cannot compile due to these TypeScript errors
+
+### Next Steps Required
+1. Update the API client to properly handle Supabase query execution
+2. OR update all stores to execute queries before passing to API wrapper
+3. Fix auth handling to work with the API wrapper's expected types

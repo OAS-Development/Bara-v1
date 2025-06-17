@@ -1,0 +1,55 @@
+{
+  "session": "8.2",
+  "title": "Critical Error Resolution",
+  "status": "PARTIAL",
+  "duration": "15 minutes",
+  "objectives": {
+    "primary": "Fix critical TypeScript compilation error in goals-store.ts",
+    "secondary": [
+      "Add type-check script to package.json",
+      "Ensure application builds successfully"
+    ]
+  },
+  "completed": {
+    "critical_fix": "Fixed the specific PostgrestBuilder error in goals-store.ts at line 109",
+    "type_check_script": "Added 'type-check': 'tsc --noEmit' to package.json scripts",
+    "auth_helper": "Created getAuthUser helper function to handle auth type mismatches",
+    "goals_store_fixed": "Goals store now compiles without errors",
+    "root_cause_identified": "Discovered systemic issue across all stores with API query patterns"
+  },
+  "blockers": {
+    "systemic_issue": {
+      "severity": "HIGH",
+      "description": "All stores in the application have the same auth pattern issue",
+      "affected_files": [
+        "src/stores/finance-store.ts",
+        "src/stores/habit-store.ts", 
+        "src/stores/health-store.ts",
+        "src/stores/journal-store.ts",
+        "src/stores/perspective-store.ts",
+        "src/stores/project-store.ts",
+        "src/stores/tag-store.ts",
+        "src/stores/task-store.ts"
+      ],
+      "impact": "Application cannot build to production due to TypeScript errors"
+    }
+  },
+  "deferred": {
+    "complete_store_fixes": "Need to update all 8 remaining stores to use getAuthUser helper",
+    "query_execution_pattern": "Some stores may have additional query execution issues",
+    "full_type_check": "Complete type checking reveals many test file issues that need addressing"
+  },
+  "impact": {
+    "functionality": "Goals functionality now works in development mode",
+    "build_status": "Production build still fails due to errors in other stores",
+    "development": "Application runs successfully in development mode"
+  },
+  "recommendations": {
+    "immediate": "Update all stores to use the getAuthUser helper pattern",
+    "future": [
+      "Consider creating a centralized store base class to avoid pattern duplication",
+      "Add pre-commit hooks to run type-check before commits",
+      "Update test files to include proper TypeScript definitions"
+    ]
+  }
+}

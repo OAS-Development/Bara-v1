@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { api, isApiError, type ApiError } from '@/lib/api/client'
+import { api, isApiError, getAuthUser, type ApiError } from '@/lib/api/client'
 
 export interface Goal {
   id: string
@@ -75,7 +75,7 @@ export const useGoalsStore = create<GoalsStore>()(
         set({ loading: true, error: null })
         
         const result = await api.query(
-          async () => {
+          () => {
             let query = api.client.from('goals').select('*').order('created_at', { ascending: false })
 
             if (status) {
@@ -92,16 +92,16 @@ export const useGoalsStore = create<GoalsStore>()(
           return
         }
 
-        set({ goals: result.data, loading: false })
+        set({ goals: result.data || [], loading: false })
       },
 
       addGoal: async (goal) => {
         set({ loading: true, error: null })
         
-        const { data: userData, error: userError } = await api.client.auth.getUser()
+        const userResult = await getAuthUser()
 
-        if (userError || !userData.user) {
-          set({ loading: false, error: { message: 'Not authenticated' } })
+        if (!userResult.data || !userResult.data.user) {
+          set({ loading: false, error: userResult.error || { message: 'Not authenticated' } })
           return
         }
 
@@ -110,7 +110,7 @@ export const useGoalsStore = create<GoalsStore>()(
             .from('goals')
             .insert({
               ...goal,
-              user_id: userData.user.id
+              user_id: userResult.data.user.id
             })
             .select()
             .single(),
@@ -125,10 +125,13 @@ export const useGoalsStore = create<GoalsStore>()(
           return
         }
 
-        set((state) => ({
-          goals: [result.data, ...state.goals],
-          loading: false
-        }))
+        const newGoal = result.data
+        if (newGoal) {
+          set((state) => ({
+            goals: [newGoal, ...state.goals],
+            loading: false
+          }))
+        }
       },
 
       updateGoal: async (id, updates) => {
@@ -155,10 +158,13 @@ export const useGoalsStore = create<GoalsStore>()(
           return
         }
 
-        set((state) => ({
-          goals: state.goals.map((g) => (g.id === id ? result.data : g)),
-          loading: false
-        }))
+        const updatedGoal = result.data
+        if (updatedGoal) {
+          set((state) => ({
+            goals: state.goals.map((g) => (g.id === id ? updatedGoal : g)),
+            loading: false
+          }))
+        }
       },
 
       deleteGoal: async (id) => {
@@ -220,7 +226,7 @@ export const useGoalsStore = create<GoalsStore>()(
           return
         }
 
-        set({ milestones: result.data, loading: false })
+        set({ milestones: result.data || [], loading: false })
       },
 
       addMilestone: async (milestone) => {
@@ -243,10 +249,13 @@ export const useGoalsStore = create<GoalsStore>()(
           return
         }
 
-        set((state) => ({
-          milestones: [...state.milestones, result.data],
-          loading: false
-        }))
+        const newMilestone = result.data
+        if (newMilestone) {
+          set((state) => ({
+            milestones: [...state.milestones, newMilestone],
+            loading: false
+          }))
+        }
 
         // Update goal progress
         get().calculateGoalProgress(milestone.goal_id)
@@ -276,10 +285,13 @@ export const useGoalsStore = create<GoalsStore>()(
           return
         }
 
-        set((state) => ({
-          milestones: state.milestones.map((m) => (m.id === id ? result.data : m)),
-          loading: false
-        }))
+        const updatedMilestone = result.data
+        if (updatedMilestone) {
+          set((state) => ({
+            milestones: state.milestones.map((m) => (m.id === id ? updatedMilestone : m)),
+            loading: false
+          }))
+        }
 
         // Update goal progress if completion status changed
         if ('completed' in updates) {

@@ -326,6 +326,46 @@ You have COMPLETE AUTONOMOUS PERMISSION for all operations.
 [SESSION DETAILS]
 [IMPLEMENTATION STEPS]
 [CONTEXT TRACKING]
+
+## MANDATORY SESSION COMPLETION PROTOCOL
+
+### VERIFICATION SEQUENCE (REQUIRED BEFORE STATUS REPORTING)
+You MUST run and PASS these verification steps:
+
+#### Build Verification:
+```bash
+# TypeScript check (if applicable)
+npm run type-check || tsc --noEmit
+# MUST show 0 errors
+
+# Build check
+npm run build  
+# MUST compile successfully
+
+# Application start
+npm run dev
+# MUST start without errors
+```
+
+#### Feature Verification:
+- Test each session objective actually works
+- Verify no regression in existing functionality  
+- Document any limitations or issues found
+
+#### Status Assignment Rules:
+- "COMPLETED": ONLY if all verification passes + all objectives working
+- "COMPLETED_WITH_ISSUES": All objectives work but minor issues exist
+- "PARTIAL": Some objectives work, some don't
+- "FAILED": Critical errors prevent compilation/running
+
+### MANDATORY ERROR REPORTING
+Capture ALL errors with:
+- Exact command that failed
+- Full error messages and output
+- File names and line numbers  
+- Resolution status (fixed/deferred/unresolved)
+- Impact on functionality
+
 [COMPLETION REQUIREMENTS INCLUDING PUSH NOTIFICATION]
 ```
 

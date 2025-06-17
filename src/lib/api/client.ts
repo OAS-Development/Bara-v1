@@ -49,7 +49,7 @@ class ApiClient {
 
   // Wrapper for Supabase queries with consistent error handling
   async query<T>(
-    queryFn: () => Promise<{ data: T | null; error: PostgrestError | null }>,
+    queryFn: () => Promise<{ data: T | null; error: PostgrestError | null }> | PromiseLike<{ data: T | null; error: PostgrestError | null }>,
     options?: {
       showToast?: boolean
       errorContext?: string
@@ -86,7 +86,7 @@ class ApiClient {
 
   // Convenience method for mutations with success feedback
   async mutate<T>(
-    mutationFn: () => Promise<{ data: T | null; error: PostgrestError | null }>,
+    mutationFn: () => Promise<{ data: T | null; error: PostgrestError | null }> | PromiseLike<{ data: T | null; error: PostgrestError | null }>,
     options?: {
       showToast?: boolean
       successMessage?: string
@@ -113,6 +113,17 @@ class ApiClient {
 
 // Export singleton instance
 export const api = new ApiClient()
+
+// Helper for auth queries that need special handling
+export const getAuthUser = async () => {
+  const { data, error } = await api.client.auth.getUser()
+  
+  if (error || !data.user) {
+    return { data: null, error: error || { message: 'No authenticated user' } }
+  }
+  
+  return { data: { user: data.user }, error: null }
+}
 
 // Export convenience functions
 export const handleApiError = (error: ApiError, context?: string) => {
