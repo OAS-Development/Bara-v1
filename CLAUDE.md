@@ -21,3 +21,9 @@ Personal productivity suite - a comprehensive application for managing tasks, no
 - **Quick Status:** Run ./status.sh
 - **Current State:** See CURRENT_STATE.md
 - **Generate Prompt:** ./generate-context-prompt.sh | pbcopy
+
+## CRITICAL SESSION PROTOCOL
+- **MANDATORY:** Check CRITICAL_CHECKS_PROTOCOL.md before marking ANY session complete
+- **Database Migrations:** If migrations fail, mark session as BLOCKED, not completed
+- **Blocking Issues:** Report at TOP of session status with severity levels
+- **Verification:** All features must be testable or session is incomplete
