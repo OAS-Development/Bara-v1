@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bara-v1 Figma Component Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #0a0a0b; margin-bottom: 40px; }
+        h2 { color: #1f2937; margin-top: 40px; margin-bottom: 20px; }
+        h3 { color: #4b5563; margin-top: 30px; margin-bottom: 15px; }
+        
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        .color-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .color-swatch {
+            height: 80px;
+            position: relative;
+        }
+        .color-info {
+            padding: 12px;
+            background: white;
+        }
+        .color-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .color-value {
+            font-size: 12px;
+            color: #6b7280;
+            font-family: monospace;
+        }
+        
+        .typography-sample {
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .type-name {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .type-specs {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 8px;
+            font-family: monospace;
+        }
+        
+        .component-preview {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            background: #fafafa;
+        }
+        .component-title {
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .component-demo {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .spacing-grid {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .spacing-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 16px;
+            text-align: center;
+        }
+        .spacing-box {
+            background: #2563eb;
+            margin: 0 auto 8px;
+        }
+        .spacing-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        /* Component Mockups */
+        .sidebar-mock {
+            width: 280px;
+            background: #0a0a0b;
+            color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #1f2937;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .nav-section {
+            padding: 8px;
+        }
+        .nav-header {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #9ca3af;
+            padding: 4px 8px;
+        }
+        .nav-item {
+            padding: 8px 12px;
+            margin: 2px 0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background: #1f2937;
+        }
+        .nav-item.active {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .button-demo {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        .btn-outline {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        .btn-outline:hover {
+            background: #f3f4f6;
+        }
+        .btn-ghost {
+            background: transparent;
+            color: #374151;
+        }
+        .btn-ghost:hover {
+            background: #f3f4f6;
+        }
+        
+        .task-item-mock {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #1f2937;
+            background: #0a0a0b;
+            color: white;
+        }
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #d1d5db;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .task-content {
+            flex: 1;
+        }
+        .task-title {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .task-meta {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .input-mock {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 300px;
+            background: white;
+        }
+        .input-mock:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bara-v1 Figma Component Guide</h1>
+        <p>Visual reference for converting Bara React components to Figma. Channel: <code>p4rsoq3p</code></p>
+        
+        <h2>Design System</h2>
+        
+        <h3>Color Palette</h3>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #0a0a0b;"></div>
+                <div class="color-info">
+                    <div class="color-name">Background Primary</div>
+                    <div class="color-value">#0a0a0b • gray-950</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #1f2937;"></div>
+                <div class="color-info">
+                    <div class="color-name">Surface</div>
+                    <div class="color-value">#1f2937 • gray-800</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #2563eb;"></div>
+                <div class="color-info">
+                    <div class="color-name">Primary Blue</div>
+                    <div class="color-value">#2563eb • blue-600</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #3b82f6;"></div>
+                <div class="color-info">
+                    <div class="color-name">Focus Blue</div>
+                    <div class="color-value">#3b82f6 • blue-500</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #ffffff;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Primary</div>
+                    <div class="color-value">#ffffff • white</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #d1d5db;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Secondary</div>
+                    <div class="color-value">#d1d5db • gray-300</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #9ca3af;"></div>
+                <div class="color-info">
+                    <div class="color-name">Text Muted</div>
+                    <div class="color-value">#9ca3af • gray-500</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #f87171;"></div>
+                <div class="color-info">
+                    <div class="color-name">Error/Overdue</div>
+                    <div class="color-value">#f87171 • red-400</div>
+                </div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #fbbf24;"></div>
+                <div class="color-info">
+                    <div class="color-name">Warning/Due</div>
+                    <div class="color-value">#fbbf24 • yellow-400</div>
+                </div>
+            </div>
+        </div>
+        
+        <h3>Typography</h3>
+        <div class="typography-sample">
+            <div class="type-name">Heading/2xl</div>
+            <div style="font-size: 24px; font-weight: 600;">Card Title Text</div>
+            <div class="type-specs">24px • 600 weight</div>
+        </div>
+        <div class="typography-sample">
+            <div class="type-name">Heading/xl</div>
+            <div style="font-size: 20px; font-weight: 600;">App Title</div>
+            <div class="type-specs">20px • 600 weight</div>
+        </div>
+        <div class="typography-sample">
+            <div class="type-name">Body/base</div>
+            <div style="font-size: 16px;">Default body text</div>
+            <div class="type-specs">16px • 400 weight</div>
+        </div>
+        <div class="typography-sample">
+            <div class="type-name">Body/sm</div>
+            <div style="font-size: 14px;">Common UI text</div>
+            <div class="type-specs">14px • 400 weight</div>
+        </div>
+        <div class="typography-sample">
+            <div class="type-name">Label/uppercase</div>
+            <div style="font-size: 12px; font-weight: 600; text-transform: uppercase;">SECTION HEADER</div>
+            <div class="type-specs">12px • 600 weight • uppercase</div>
+        </div>
+        
+        <h3>Spacing</h3>
+        <div class="spacing-grid">
+            <div class="spacing-item">
+                <div class="spacing-box" style="width: 4px; height: 4px;"></div>
+                <div class="spacing-label">4px (p-1)</div>
+            </div>
+            <div class="spacing-item">
+                <div class="spacing-box" style="width: 8px; height: 8px;"></div>
+                <div class="spacing-label">8px (p-2)</div>
+            </div>
+            <div class="spacing-item">
+                <div class="spacing-box" style="width: 12px; height: 12px;"></div>
+                <div class="spacing-label">12px (p-3)</div>
+            </div>
+            <div class="spacing-item">
+                <div class="spacing-box" style="width: 16px; height: 16px;"></div>
+                <div class="spacing-label">16px (p-4)</div>
+            </div>
+            <div class="spacing-item">
+                <div class="spacing-box" style="width: 24px; height: 24px;"></div>
+                <div class="spacing-label">24px (p-6)</div>
+            </div>
+        </div>
+        
+        <h2>Component Library</h2>
+        
+        <h3>Sidebar Component</h3>
+        <div class="component-preview">
+            <div class="component-title">Sidebar (280px width)</div>
+            <div class="component-demo">
+                <div class="sidebar-mock">
+                    <div class="sidebar-header">Bara</div>
+                    <div class="nav-section">
+                        <div class="nav-header">PERSPECTIVES</div>
+                        <div class="nav-item">📥 Inbox</div>
+                        <div class="nav-item active">📅 Today</div>
+                        <div class="nav-item">📆 Upcoming</div>
+                        <div class="nav-item">⏳ Anytime</div>
+                        <div class="nav-item">💭 Someday</div>
+                    </div>
+                    <div class="nav-section">
+                        <div class="nav-header">ORGANIZE</div>
+                        <div class="nav-item">📁 Projects</div>
+                        <div class="nav-item">🏷️ Tags</div>
+                        <div class="nav-item">📊 Review</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h3>Button Component</h3>
+        <div class="component-preview">
+            <div class="component-title">Button Variants</div>
+            <div class="component-demo">
+                <div class="button-demo">
+                    <button class="btn btn-primary">Primary</button>
+                    <button class="btn btn-outline">Outline</button>
+                    <button class="btn btn-ghost">Ghost</button>
+                    <button class="btn btn-primary" style="height: 36px; padding: 0 12px; font-size: 14px;">Small</button>
+                    <button class="btn btn-primary" style="height: 44px; padding: 0 32px;">Large</button>
+                    <button class="btn btn-primary" style="width: 40px; height: 40px; padding: 0;">🔍</button>
+                </div>
+            </div>
+        </div>
+        
+        <h3>TaskItem Component</h3>
+        <div class="component-preview">
+            <div class="component-title">Task Item States</div>
+            <div class="component-demo" style="background: #0a0a0b;">
+                <div class="task-item-mock">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-title">Complete project documentation</div>
+                        <div class="task-meta">Due tomorrow • Work Project</div>
+                    </div>
+                </div>
+                <div class="task-item-mock" style="background: rgba(31, 41, 55, 0.5);">
+                    <div class="task-checkbox" style="background: #2563eb;">✓</div>
+                    <div class="task-content">
+                        <div class="task-title" style="text-decoration: line-through; color: #9ca3af;">Completed task</div>
+                        <div class="task-meta">Completed today</div>
+                    </div>
+                </div>
+                <div class="task-item-mock" style="background: rgba(153, 27, 27, 0.2);">
+                    <div class="task-checkbox"></div>
+                    <div class="task-content">
+                        <div class="task-title">Overdue task</div>
+                        <div class="task-meta" style="color: #f87171;">Due yesterday • Important</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h3>Input Component</h3>
+        <div class="component-preview">
+            <div class="component-title">Input States</div>
+            <div class="component-demo">
+                <input class="input-mock" placeholder="Default input">
+                <br><br>
+                <input class="input-mock" placeholder="Focused input" style="outline: 2px solid #3b82f6; outline-offset: 2px;">
+                <br><br>
+                <input class="input-mock" placeholder="Disabled input" disabled style="opacity: 0.5; cursor: not-allowed;">
+            </div>
+        </div>
+        
+        <h2>Component Dimensions Reference</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="background: #f3f4f6;">
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb;">Component</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb;">Width</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb;">Height</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #e5e7eb;">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Sidebar</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">280px</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">100%</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Fixed width</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">MainContent</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Flexible</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">100%</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Fills available space</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Inspector</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">320px</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">100%</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Fixed width</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Toolbar</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">100%</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">48px</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Fixed height</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Quick Entry Bar</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">100%</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">56px</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Fixed height</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Button (default)</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Auto</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">40px</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Padding: 16px horizontal</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Input</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">100%</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">40px</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Padding: 12px horizontal</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">TaskItem</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">100%</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Auto</td>
+                    <td style="padding: 12px; border: 1px solid #e5e7eb;">Min height ~64px</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h2>Figma Implementation Notes</h2>
+        <ul>
+            <li>Use Auto Layout for all components to ensure responsive behavior</li>
+            <li>Create color styles for all design tokens for easy theme updates</li>
+            <li>Use component variants for different states (hover, active, disabled)</li>
+            <li>Maintain 4px grid alignment throughout</li>
+            <li>Icons should be 16x16px for standard UI, 20x20px for larger elements</li>
+            <li>Border radius: 3px (small), 6px (medium), 8px (large)</li>
+            <li>Use consistent naming: ComponentName/Variant/State</li>
+        </ul>
+    </div>
+</body>
+</html>
