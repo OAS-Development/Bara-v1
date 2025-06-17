@@ -1,6 +1,26 @@
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
+import { useTaskStore } from '@/stores/task-store'
+
 export function MainContent({ children }: { children: React.ReactNode }) {
+  const [quickEntryValue, setQuickEntryValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const { createTask } = useTaskStore()
+
+  const handleQuickEntry = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!quickEntryValue.trim()) return
+    
+    await createTask({ title: quickEntryValue.trim() })
+    setQuickEntryValue('')
+  }
+
+  // Focus quick entry on mount
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
   return (
     <div className="flex-1 flex flex-col">
       {/* Toolbar */}
@@ -16,13 +36,16 @@ export function MainContent({ children }: { children: React.ReactNode }) {
       </div>
       
       {/* Quick Entry Bar */}
-      <div className="h-14 border-t border-gray-800 flex items-center px-4">
+      <form onSubmit={handleQuickEntry} className="h-14 border-t border-gray-800 flex items-center px-4">
         <input
+          ref={inputRef}
           type="text"
+          value={quickEntryValue}
+          onChange={(e) => setQuickEntryValue(e.target.value)}
           placeholder="Type to add to Inbox"
           className="flex-1 bg-gray-800 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-      </div>
+      </form>
     </div>
   )
 }

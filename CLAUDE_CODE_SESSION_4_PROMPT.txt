@@ -1,0 +1,26 @@
+cd /Volumes/DevDrive/ClaudeProjects/active/Bara-v1
+./claude-code-aggressive.sh
+
+Once Claude Code starts, IMMEDIATELY run:
+/permissions add *
+
+This will stop all approval prompts for this session.
+
+Now execute Session 4 for the Bara-v1 project. This is a DOUBLE SESSION (90 minutes) combining Projects & Tags System.
+
+The session definition is located at:
+/Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-04-projects-tags.md
+
+Please:
+1. Read the ENTIRE session document carefully
+2. Execute ALL implementation steps in order
+3. Complete both Part A and Part B
+4. Run all verification steps as you go
+5. Ensure everything works before the final git push
+6. **IMPORTANT**: Save your completion report to:
+   /Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-04-status.json
+7. Confirm the session is complete and the status file is saved
+
+You have permission to create all files, run all commands, and make all necessary changes without asking for individual approvals.
+
+This is a 90-minute double session. The session document contains all implementation details.

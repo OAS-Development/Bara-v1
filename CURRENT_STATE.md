@@ -1,8 +1,9 @@
 # Bara Project - Current State
 
-**Last Updated:** June 16, 2025 - 6:45 PM
-**Current Session:** 2 (Ready to execute)
+**Last Updated:** June 16, 2025 - 7:45 PM
+**Current Session:** 3 (Ready to execute)
 **Session 1 Status:** ✅ COMPLETE (with Supabase credential warnings)
+**Session 2 Status:** ⚠️ PARTIAL (UI complete, DB schema ready, needs Supabase setup)
 **Project Location:** `/Volumes/DevDrive/ClaudeProjects/active/Bara-v1`
 **Model:** Two-Actor Development (Desktop plans, Code implements)
 
@@ -27,28 +28,33 @@
 - ✅ 18 DOUBLE sessions defined (was 35+ single)
 - ✅ Aggressive permissions configured
 - ✅ Session 1: Project setup COMPLETE
-- 🔲 Session 2: Database & Layout (90 min combined)
+- ⚠️ Session 2: Database & Layout PARTIAL (UI done, DB needs setup)
 - 🔲 Session 3: Tasks & Keyboard (90 min combined)
 
 ## Active Decisions/Blockers
 - ✅ RESOLVED: Sessions now doubled up for efficiency
 - Claude Code has more context capacity than initially planned
 - New session structure: 90-minute double sessions
-- ⚠️ PENDING: Need real Supabase credentials (currently using placeholders)
+- ⚠️ PENDING: Need real Supabase project setup:
+  - Create project at supabase.com
+  - Add credentials to .env.local
+  - Run migrations (Docker needed for local dev)
+- ⚠️ BLOCKER: Docker required for local Supabase development
 - ✅ FIXED: All session prompts now include aggressive script launch
 
 ## Next Actions - Ready to Execute!
 
 ### For You (Human):
-1. Open a **fresh terminal** (close any existing Claude Code)
-2. Run: `cd /Volumes/DevDrive/ClaudeProjects/active/Bara-v1`
-3. Run: `./launch-session.sh 2`
-4. Follow the displayed instructions
+1. **FIRST**: Set up Supabase project at supabase.com
+2. Add credentials to .env.local
+3. Open a **fresh terminal**
+4. Paste the prompt from `CLAUDE_CODE_SESSION_3_PROMPT.txt`
 
 ### For Claude Code:
-1. Executes Session 2 (Database + Layout) - 90 minutes
-2. Saves status to `/sessions/session-02-status.json`
-3. Confirms completion
+1. Executes Session 3 (Tasks & Keyboard) - 90 minutes
+2. **FIRST**: Runs database migrations
+3. Implements task CRUD with real database
+4. Saves status to `/sessions/session-03-status.json`
 
 ### For Claude Desktop (next chat):
 1. Read session-02-status.json

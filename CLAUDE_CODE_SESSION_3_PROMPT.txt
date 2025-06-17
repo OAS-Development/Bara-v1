@@ -1,8 +1,10 @@
 cd /Volumes/DevDrive/ClaudeProjects/active/Bara-v1
 ./claude-code-aggressive.sh
 
-If the aggressive script doesn't work, run regular claude-code and immediately run:
+Once Claude Code starts, IMMEDIATELY run:
 /permissions add *
+
+This will stop all approval prompts for this session.
 
 Now execute Session 3 for the Bara-v1 project. This is a DOUBLE SESSION (90 minutes) combining Task System and Keyboard Navigation.
 
@@ -13,28 +15,70 @@ For this session, you have permission to:
 - Modify any files in the project
 - Execute git commands
 - Run the development server
-- Modify keyboard event handlers
+- Run Supabase migrations
+- Execute database queries
 
 Please proceed with Session 3 without asking for individual approvals.
+
+## IMPORTANT: First Run Database Migrations
+
+Since Supabase is now connected, start by running the migrations:
+
+1. Install Supabase CLI if not already installed:
+```bash
+npm install -g supabase
+```
+
+2. Run the migrations:
+```bash
+npx supabase db push --db-url "postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
+```
+
+OR manually run them in Supabase dashboard:
+- Copy contents of supabase/migrations/001_create_tables.sql
+- Run in SQL Editor
+- Copy contents of supabase/migrations/002_rls_policies.sql  
+- Run in SQL Editor
+
+3. Verify tables exist:
+```bash
+node -e "
+import { createClient } from '@supabase/supabase-js'
+import dotenv from 'dotenv'
+dotenv.config({ path: '.env.local' })
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
+
+const { data, error } = await supabase.from('tasks').select('count')
+console.log(error ? '❌ Migration failed' : '✅ Migrations successful!')
+"
+```
+
+## Then Continue with Session 3
 
 The session definition is located at:
 /Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-03-tasks-keyboard.md
 
 Please:
-1. Read the entire session document carefully
-2. Execute ALL implementation steps in order
-3. Complete both Part A (Task CRUD) and Part B (Keyboard Shortcuts)
-4. Run all verification steps as you go
-5. Ensure everything works before the final git push
-6. **IMPORTANT**: Save your completion report to:
+1. Run database migrations FIRST
+2. Read the entire session document carefully
+3. Execute ALL implementation steps in order
+4. Complete both Part A (Task CRUD) and Part B (Keyboard Shortcuts)
+5. Run all verification steps as you go
+6. Ensure everything works before the final git push
+7. **IMPORTANT**: Save your completion report to:
    /Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-03-status.json
-7. Confirm the session is complete and the status file is saved
+8. Confirm the session is complete and the status file is saved
 
 Important notes:
 - This is a 90-minute double session - complete BOTH parts
+- With real database connection, implement actual CRUD operations
 - Focus on making task operations smooth and keyboard shortcuts responsive
 - All verification steps are part of implementation
 - Only push to GitHub after all verification passes
 - The status report MUST be saved as a file, not just displayed
 
-The session includes building the complete task management system with full keyboard control.
+The session includes building the complete task management system with full keyboard control, now with real database persistence!

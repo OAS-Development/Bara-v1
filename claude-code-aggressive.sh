@@ -16,7 +16,7 @@ echo "Launching Claude Code in FULL AUTONOMOUS MODE..."
 echo "All actions will be auto-approved. No confirmations required."
 echo ""
 
-claude-code \
+claude \
   --allowedTools "*" \
   --autoApprove true \
   --skipConfirmations true \
