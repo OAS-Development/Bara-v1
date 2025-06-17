@@ -5,7 +5,7 @@ echo "🚀 Setting up AGGRESSIVE PERMISSIONS for Bara-v1..."
 echo ""
 
 # 1. Make scripts executable
-chmod +x claude-code-aggressive.sh generate-context-prompt.sh status.sh check-sessions.sh launch-session.sh start-new-session.sh show-migrations.sh 2>/dev/null
+chmod +x claude-code-aggressive.sh generate-context-prompt.sh status.sh check-sessions.sh launch-session.sh start-new-session.sh show-migrations.sh fix-permissions.sh 2>/dev/null
 
 # 2. Remove any restrictive settings
 rm -f .claude/settings.local.json 2>/dev/null

@@ -1,14 +1,19 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, Folder, Tag, Calendar, Clock } from 'lucide-react'
+import { X, Folder, Tag, Calendar, Clock, MapPin, Battery, Sunrise, Sun, Sunset, Moon } from 'lucide-react'
 import { useTaskStore } from '@/stores/task-store'
 import { useProjectStore } from '@/stores/project-store'
 import { useTagStore } from '@/stores/tag-store'
+import { useLocationStore } from '@/stores/location-store'
+import { useEnergyStore, EnergyLevel } from '@/stores/energy-store'
+import { TimeOfDay } from '@/lib/context/time-rules'
 import { ProjectPicker } from '@/components/projects/project-picker'
 import { TagPicker } from '@/components/tags/tag-picker'
 import { TagChip } from '@/components/tags/tag-chip'
 import { DatePicker } from '@/components/dates/date-picker'
+import { LocationPicker } from '@/components/location/location-picker'
+import * as Select from '@radix-ui/react-select'
 
 interface QuickEntryModalProps {
   isOpen: boolean
@@ -22,13 +27,20 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
   const [tagIds, setTagIds] = useState<string[]>([])
   const [deferDate, setDeferDate] = useState<Date | null>(null)
   const [dueDate, setDueDate] = useState<Date | null>(null)
+  const [locationId, setLocationId] = useState<string | null>(null)
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay | null>(null)
+  const [energyRequired, setEnergyRequired] = useState<EnergyLevel | null>(null)
   const [showProjectPicker, setShowProjectPicker] = useState(false)
   const [showTagPicker, setShowTagPicker] = useState(false)
   const [showDatePickers, setShowDatePickers] = useState(false)
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const [showContextPickers, setShowContextPickers] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const { createTask } = useTaskStore()
   const { getProjectById } = useProjectStore()
   const { tags } = useTagStore()
+  const { locations } = useLocationStore()
+  const { currentLevel } = useEnergyStore()
 
   useEffect(() => {
     if (isOpen) {
@@ -39,7 +51,12 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
       setTagIds([])
       setDeferDate(null)
       setDueDate(null)
+      setLocationId(null)
+      setTimeOfDay(null)
+      setEnergyRequired(null)
       setShowDatePickers(false)
+      setShowLocationPicker(false)
+      setShowContextPickers(false)
     }
   }, [isOpen])
 
@@ -53,7 +70,10 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
       project_id: projectId,
       tagIds,
       defer_date: deferDate?.toISOString() || null,
-      due_date: dueDate?.toISOString() || null
+      due_date: dueDate?.toISOString() || null,
+      location: locationId,
+      time_of_day: timeOfDay,
+      energy_required: energyRequired
     })
     onClose()
   }
@@ -181,6 +201,98 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
                     placeholder="No due date"
                     className="w-full bg-gray-700 text-white border-gray-600"
                   />
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowLocationPicker(!showLocationPicker)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left bg-gray-800 rounded hover:bg-gray-700 transition-colors"
+            >
+              <MapPin className="h-4 w-4 text-gray-400" />
+              <span className="flex-1">
+                {locationId 
+                  ? locations.find(l => l.id === locationId)?.name || 'Location'
+                  : 'No Location'
+                }
+              </span>
+            </button>
+
+            {showLocationPicker && (
+              <div className="bg-gray-800 rounded p-3">
+                <LocationPicker
+                  value={locationId}
+                  onChange={setLocationId}
+                  placeholder="Select location"
+                />
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowContextPickers(!showContextPickers)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left bg-gray-800 rounded hover:bg-gray-700 transition-colors"
+            >
+              <Battery className="h-4 w-4 text-gray-400" />
+              <span className="flex-1">
+                {timeOfDay || energyRequired 
+                  ? `${timeOfDay ? `Time: ${timeOfDay}` : ''} ${energyRequired ? `Energy: ${energyRequired}` : ''}`
+                  : 'No Context'
+                }
+              </span>
+            </button>
+
+            {showContextPickers && (
+              <div className="space-y-3 bg-gray-800 rounded p-3">
+                <div>
+                  <label className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+                    <Clock className="h-3 w-3" />
+                    Best Time of Day
+                  </label>
+                  <div className="flex gap-2">
+                    {(['morning', 'afternoon', 'evening', 'night'] as TimeOfDay[]).map((time) => (
+                      <button
+                        key={time}
+                        type="button"
+                        onClick={() => setTimeOfDay(timeOfDay === time ? null : time)}
+                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                          timeOfDay === time
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                        }`}
+                      >
+                        {time === 'morning' && <Sunrise className="h-3 w-3 inline mr-1" />}
+                        {time === 'afternoon' && <Sun className="h-3 w-3 inline mr-1" />}
+                        {time === 'evening' && <Sunset className="h-3 w-3 inline mr-1" />}
+                        {time === 'night' && <Moon className="h-3 w-3 inline mr-1" />}
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+                    <Battery className="h-3 w-3" />
+                    Energy Required
+                  </label>
+                  <div className="flex gap-2">
+                    {(['low', 'medium', 'high'] as EnergyLevel[]).map((energy) => (
+                      <button
+                        key={energy}
+                        type="button"
+                        onClick={() => setEnergyRequired(energyRequired === energy ? null : energy)}
+                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                          energyRequired === energy
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                        }`}
+                      >
+                        {energy}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

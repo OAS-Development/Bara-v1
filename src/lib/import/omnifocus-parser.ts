@@ -217,3 +217,9 @@ export class OmniFocusParser {
     }
   }
 }
+
+// Export types for use in other files
+export type OmniFocusTask = OFTask
+export type OmniFocusProject = OFProject
+export type OmniFocusContext = OFContext
+export type OmniFocusData = OFArchive
