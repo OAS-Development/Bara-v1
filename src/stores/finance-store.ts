@@ -1,44 +1,10 @@
 import { create } from 'zustand'
 import { api, isApiError, type ApiError } from '@/lib/api/client'
+import type { Database } from '@/types/database.types'
 
-export interface FinancialAccount {
-  id: string
-  user_id: string
-  name: string
-  type: 'checking' | 'savings' | 'credit' | 'investment' | 'loan'
-  balance?: number
-  currency: string
-  institution?: string
-  account_number_last4?: string
-  active: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface FinancialTransaction {
-  id: string
-  account_id: string
-  amount: number
-  type: 'income' | 'expense' | 'transfer'
-  category?: string
-  description?: string
-  transaction_date: string
-  created_at: string
-  updated_at: string
-}
-
-export interface Budget {
-  id: string
-  user_id: string
-  category: string
-  amount: number
-  period: 'monthly' | 'yearly'
-  start_date: string
-  end_date?: string
-  active: boolean
-  created_at: string
-  updated_at: string
-}
+export type FinancialAccount = Database['public']['Tables']['financial_accounts']['Row']
+export type FinancialTransaction = Database['public']['Tables']['financial_transactions']['Row']
+export type Budget = Database['public']['Tables']['budgets']['Row']
 
 interface FinanceStore {
   accounts: FinancialAccount[]
@@ -103,18 +69,15 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
           return
         }
 
-        set({ accounts: result.data, loading: false })
+        set({ accounts: result.data || [], loading: false })
       },
 
       addAccount: async (account) => {
         set({ loading: true, error: null })
         
-        const userResult = await api.query(
-          () => api.client.auth.getUser(),
-          { showToast: false }
-        )
+        const { data: userData, error: userError } = await api.client.auth.getUser()
 
-        if (isApiError(userResult) || !userResult.data.user) {
+        if (userError || !userData.user) {
           set({ loading: false, error: { message: 'Not authenticated' } })
           return
         }
@@ -124,7 +87,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
             .from('financial_accounts')
             .insert({
               ...account,
-              user_id: userResult.data.user.id
+              user_id: userData.user.id
             })
             .select()
             .single(),
@@ -134,13 +97,14 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
           }
         )
 
-        if (isApiError(result)) {
-          set({ loading: false, error: result.error })
+        if (isApiError(result) || !result.data) {
+          set({ loading: false, error: result.error || { message: 'Failed to create account' } })
           return
         }
 
+        const newAccount = result.data
         set((state) => ({
-          accounts: [result.data, ...state.accounts],
+          accounts: [newAccount, ...state.accounts],
           loading: false
         }))
       },
@@ -169,8 +133,14 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
           return
         }
 
+        if (!result.data) {
+          set({ loading: false })
+          return
+        }
+        
+        const updatedAccount = result.data
         set((state) => ({
-          accounts: state.accounts.map((a) => (a.id === id ? result.data : a)),
+          accounts: state.accounts.map((a) => (a.id === id ? updatedAccount : a)),
           loading: false
         }))
       },
@@ -229,7 +199,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
           return
         }
 
-        set({ transactions: result.data, loading: false })
+        set({ transactions: result.data || [], loading: false })
       },
 
       addTransaction: async (transaction) => {
@@ -247,14 +217,16 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
           }
         )
 
-        if (isApiError(result)) {
-          set({ loading: false, error: result.error })
+        if (isApiError(result) || !result.data) {
+          set({ loading: false, error: result.error || { message: 'Failed to create transaction' } })
           return
         }
 
+        const newTransaction = result.data
+        
         // Update account balance if needed
         const account = get().accounts.find((a) => a.id === transaction.account_id)
-        if (account && account.balance !== undefined) {
+        if (account && account.balance !== null && account.balance !== undefined) {
           const balanceChange =
             transaction.type === 'income' ? transaction.amount : -transaction.amount
 
@@ -264,7 +236,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
         }
 
         set((state) => ({
-          transactions: [result.data, ...state.transactions],
+          transactions: [newTransaction, ...state.transactions],
           loading: false
         }))
       },
@@ -294,7 +266,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
         }
 
         set((state) => ({
-          transactions: state.transactions.map((t) => (t.id === id ? result.data : t)),
+          transactions: state.transactions.map((t) => (t.id === id && result.data ? result.data : t)),
           loading: false
         }))
       },
@@ -326,7 +298,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
         set({ loading: true, error: null })
         
         const result = await api.query(
-          () => api.client
+          async () => api.client
             .from('budgets')
             .select('*')
             .eq('active', true)
@@ -339,18 +311,15 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
           return
         }
 
-        set({ budgets: result.data, loading: false })
+        set({ budgets: result.data || [], loading: false })
       },
 
       addBudget: async (budget) => {
         set({ loading: true, error: null })
         
-        const userResult = await api.query(
-          () => api.client.auth.getUser(),
-          { showToast: false }
-        )
+        const { data: userData, error: userError } = await api.client.auth.getUser()
 
-        if (isApiError(userResult) || !userResult.data.user) {
+        if (userError || !userData.user) {
           set({ loading: false, error: { message: 'Not authenticated' } })
           return
         }
@@ -360,7 +329,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
             .from('budgets')
             .insert({
               ...budget,
-              user_id: userResult.data.user.id
+              user_id: userData.user.id
             })
             .select()
             .single(),
@@ -370,13 +339,14 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
           }
         )
 
-        if (isApiError(result)) {
-          set({ loading: false, error: result.error })
+        if (isApiError(result) || !result.data) {
+          set({ loading: false, error: result.error || { message: 'Failed to create budget' } })
           return
         }
 
+        const newBudget = result.data
         set((state) => ({
-          budgets: [...state.budgets, result.data],
+          budgets: [...state.budgets, newBudget],
           loading: false
         }))
       },
@@ -406,7 +376,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
         }
 
         set((state) => ({
-          budgets: state.budgets.map((b) => (b.id === id ? result.data : b)),
+          budgets: state.budgets.map((b) => (b.id === id && result.data ? result.data : b)),
           loading: false
         }))
       },
@@ -460,7 +430,7 @@ export const useFinanceStore = create<FinanceStore>((set, get) => ({
             (t) =>
               t.type === 'expense' &&
               t.category === category &&
-              new Date(t.transaction_date) >= startDate
+              new Date(t.date) >= startDate
           )
           .reduce((total, t) => total + t.amount, 0)
       },

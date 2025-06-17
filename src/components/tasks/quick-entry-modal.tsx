@@ -91,11 +91,7 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
     const validation = safeValidate(taskSchema, taskData)
     if (!validation.success) {
       const firstError = validation.error.errors[0]
-      toast({
-        title: 'Validation Error',
-        description: firstError.message,
-        variant: 'destructive'
-      })
+      toast.error(firstError.message)
       return
     }
 

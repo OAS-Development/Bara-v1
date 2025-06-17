@@ -82,8 +82,8 @@ export function AccountSummary({ onAddAccount }: AccountSummaryProps) {
               className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className={cn('p-2 rounded-full bg-muted', accountColors[account.type])}>
-                  {accountIcons[account.type]}
+                <div className={cn('p-2 rounded-full bg-muted', accountColors[account.type as keyof typeof accountColors] || '')}>
+                  {accountIcons[account.type as keyof typeof accountIcons] || <Wallet className="w-4 h-4" />}
                 </div>
                 <div>
                   <div className="font-medium">{account.name}</div>
@@ -92,8 +92,8 @@ export function AccountSummary({ onAddAccount }: AccountSummaryProps) {
                       {account.type}
                     </Badge>
                     {account.institution && <span>{account.institution}</span>}
-                    {account.account_number_last4 && (
-                      <span>****{account.account_number_last4}</span>
+                    {account.account_number && (
+                      <span>****{account.account_number.slice(-4)}</span>
                     )}
                   </div>
                 </div>

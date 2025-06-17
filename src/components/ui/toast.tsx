@@ -1,6 +1,6 @@
 'use client'
 
-import { Toaster as Sonner } from 'sonner'
+import { Toaster as Sonner, toast as sonnerToast } from 'sonner'
 
 export function Toaster() {
   return (
@@ -22,3 +22,5 @@ export function Toaster() {
     />
   )
 }
+
+export const toast = sonnerToast

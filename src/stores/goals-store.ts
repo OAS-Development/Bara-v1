@@ -75,7 +75,7 @@ export const useGoalsStore = create<GoalsStore>()(
         set({ loading: true, error: null })
         
         const result = await api.query(
-          () => {
+          async () => {
             let query = api.client.from('goals').select('*').order('created_at', { ascending: false })
 
             if (status) {
@@ -98,12 +98,9 @@ export const useGoalsStore = create<GoalsStore>()(
       addGoal: async (goal) => {
         set({ loading: true, error: null })
         
-        const userResult = await api.query(
-          () => api.client.auth.getUser(),
-          { showToast: false }
-        )
+        const { data: userData, error: userError } = await api.client.auth.getUser()
 
-        if (isApiError(userResult) || !userResult.data.user) {
+        if (userError || !userData.user) {
           set({ loading: false, error: { message: 'Not authenticated' } })
           return
         }
@@ -113,7 +110,7 @@ export const useGoalsStore = create<GoalsStore>()(
             .from('goals')
             .insert({
               ...goal,
-              user_id: userResult.data.user.id
+              user_id: userData.user.id
             })
             .select()
             .single(),

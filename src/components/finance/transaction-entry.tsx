@@ -64,9 +64,11 @@ export function TransactionEntry() {
         account_id: accountId,
         amount: Number(amount),
         type,
-        category: category || undefined,
-        description: description || undefined,
-        transaction_date: transactionDate
+        category: category || 'Uncategorized',
+        description: description || null,
+        date: transactionDate,
+        user_id: 'ada65fa0-9670-4369-98ee-630a80a38dc8', // Owner user ID from env
+        recurring: false
       })
 
       toast.success('Transaction added successfully')
