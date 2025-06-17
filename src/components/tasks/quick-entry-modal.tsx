@@ -1,8 +1,14 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, Folder, Tag, Calendar, Clock } from 'lucide-react'
 import { useTaskStore } from '@/stores/task-store'
+import { useProjectStore } from '@/stores/project-store'
+import { useTagStore } from '@/stores/tag-store'
+import { ProjectPicker } from '@/components/projects/project-picker'
+import { TagPicker } from '@/components/tags/tag-picker'
+import { TagChip } from '@/components/tags/tag-chip'
+import { DatePicker } from '@/components/dates/date-picker'
 
 interface QuickEntryModalProps {
   isOpen: boolean
@@ -12,14 +18,28 @@ interface QuickEntryModalProps {
 export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
+  const [projectId, setProjectId] = useState<string | null>(null)
+  const [tagIds, setTagIds] = useState<string[]>([])
+  const [deferDate, setDeferDate] = useState<Date | null>(null)
+  const [dueDate, setDueDate] = useState<Date | null>(null)
+  const [showProjectPicker, setShowProjectPicker] = useState(false)
+  const [showTagPicker, setShowTagPicker] = useState(false)
+  const [showDatePickers, setShowDatePickers] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
   const { createTask } = useTaskStore()
+  const { getProjectById } = useProjectStore()
+  const { tags } = useTagStore()
 
   useEffect(() => {
     if (isOpen) {
       titleRef.current?.focus()
       setTitle('')
       setNote('')
+      setProjectId(null)
+      setTagIds([])
+      setDeferDate(null)
+      setDueDate(null)
+      setShowDatePickers(false)
     }
   }, [isOpen])
 
@@ -27,7 +47,14 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
     e.preventDefault()
     if (!title.trim()) return
     
-    await createTask({ title: title.trim(), note: note.trim() })
+    await createTask({ 
+      title: title.trim(), 
+      note: note.trim(),
+      project_id: projectId,
+      tagIds,
+      defer_date: deferDate?.toISOString() || null,
+      due_date: dueDate?.toISOString() || null
+    })
     onClose()
   }
 
@@ -74,6 +101,89 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
               rows={3}
               className="w-full bg-gray-800 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
+
+            <button
+              type="button"
+              onClick={() => setShowProjectPicker(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left bg-gray-800 rounded hover:bg-gray-700 transition-colors"
+            >
+              <Folder className="h-4 w-4 text-gray-400" />
+              <span className="flex-1">
+                {projectId ? getProjectById(projectId)?.name : 'No Project (Inbox)'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowTagPicker(true)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left bg-gray-800 rounded hover:bg-gray-700 transition-colors"
+            >
+              <Tag className="h-4 w-4 text-gray-400" />
+              <span className="flex-1">
+                {tagIds.length > 0 ? `${tagIds.length} tag${tagIds.length > 1 ? 's' : ''}` : 'No Tags'}
+              </span>
+            </button>
+
+            {tagIds.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tagIds.map(tagId => {
+                  const tag = tags.find(t => t.id === tagId)
+                  if (!tag) return null
+                  return (
+                    <TagChip
+                      key={tag.id}
+                      name={tag.name}
+                      color={tag.color}
+                      icon={tag.icon}
+                      onRemove={() => setTagIds(tagIds.filter(id => id !== tagId))}
+                    />
+                  )
+                })}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowDatePickers(!showDatePickers)}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left bg-gray-800 rounded hover:bg-gray-700 transition-colors"
+            >
+              <Calendar className="h-4 w-4 text-gray-400" />
+              <span className="flex-1">
+                {deferDate || dueDate 
+                  ? `${deferDate ? `Defer: ${deferDate.toLocaleDateString()}` : ''} ${dueDate ? `Due: ${dueDate.toLocaleDateString()}` : ''}`
+                  : 'No Dates'
+                }
+              </span>
+            </button>
+
+            {showDatePickers && (
+              <div className="space-y-3 bg-gray-800 rounded p-3">
+                <div>
+                  <label className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                    <Clock className="h-3 w-3" />
+                    Defer Until
+                  </label>
+                  <DatePicker
+                    value={deferDate}
+                    onChange={setDeferDate}
+                    placeholder="Available immediately"
+                    className="w-full bg-gray-700 text-white border-gray-600"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                    <Calendar className="h-3 w-3" />
+                    Due Date
+                  </label>
+                  <DatePicker
+                    value={dueDate}
+                    onChange={setDueDate}
+                    placeholder="No due date"
+                    className="w-full bg-gray-700 text-white border-gray-600"
+                  />
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-800">
@@ -93,6 +203,22 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
           </div>
         </form>
       </div>
+
+      {showProjectPicker && (
+        <ProjectPicker
+          selectedProjectId={projectId || undefined}
+          onSelectProject={setProjectId}
+          onClose={() => setShowProjectPicker(false)}
+        />
+      )}
+
+      {showTagPicker && (
+        <TagPicker
+          selectedTagIds={tagIds}
+          onTagsChange={setTagIds}
+          onClose={() => setShowTagPicker(false)}
+        />
+      )}
     </div>
   )
 }

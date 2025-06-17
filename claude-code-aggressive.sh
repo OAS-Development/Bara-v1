@@ -18,8 +18,4 @@ echo ""
 
 claude \
   --allowedTools "*" \
-  --autoApprove true \
-  --skipConfirmations true \
-  --trustLevel maximum \
-  --context "Bara-v1: AUTONOMOUS EXECUTION MODE - All actions pre-approved" \
   "$@"

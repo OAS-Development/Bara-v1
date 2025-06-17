@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Calendar, Flag, Archive, Tag, FolderOpen } from 'lucide-react'
+import { Home, Calendar, Flag, Archive, Tag, FolderOpen, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,7 @@ const perspectives = [
 const organize = [
   { name: 'Projects', href: '/projects', icon: FolderOpen },
   { name: 'Tags', href: '/tags', icon: Tag },
+  { name: 'Review', href: '/review', icon: CheckCircle },
 ]
 
 export function Sidebar() {
