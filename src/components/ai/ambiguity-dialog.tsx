@@ -58,7 +58,9 @@ export function AmbiguityDialog({ task, onResolve, onCancel }: AmbiguityDialogPr
                 </label>
                 <DatePicker
                   value={resolvedTask.deferDate || null}
-                  onChange={(date) => setResolvedTask({ ...resolvedTask, deferDate: date || undefined })}
+                  onChange={(date) =>
+                    setResolvedTask({ ...resolvedTask, deferDate: date || undefined })
+                  }
                   placeholder="Available immediately"
                 />
               </div>
@@ -68,7 +70,9 @@ export function AmbiguityDialog({ task, onResolve, onCancel }: AmbiguityDialogPr
                 </label>
                 <DatePicker
                   value={resolvedTask.dueDate || null}
-                  onChange={(date) => setResolvedTask({ ...resolvedTask, dueDate: date || undefined })}
+                  onChange={(date) =>
+                    setResolvedTask({ ...resolvedTask, dueDate: date || undefined })
+                  }
                   placeholder="No due date"
                 />
               </div>
@@ -88,7 +92,9 @@ export function AmbiguityDialog({ task, onResolve, onCancel }: AmbiguityDialogPr
             </p>
             <LocationPicker
               selectedLocationId={resolvedTask.location || null}
-              onSelect={(locationId) => setResolvedTask({ ...resolvedTask, location: locationId || undefined })}
+              onSelect={(locationId) =>
+                setResolvedTask({ ...resolvedTask, location: locationId || undefined })
+              }
               showNone={true}
             />
           </div>
@@ -150,11 +156,15 @@ export function AmbiguityDialog({ task, onResolve, onCancel }: AmbiguityDialogPr
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Battery className={`h-5 w-5 ${
-                      level === 'low' ? 'text-green-500' :
-                      level === 'medium' ? 'text-yellow-500' :
-                      'text-red-500'
-                    }`} />
+                    <Battery
+                      className={`h-5 w-5 ${
+                        level === 'low'
+                          ? 'text-green-500'
+                          : level === 'medium'
+                            ? 'text-yellow-500'
+                            : 'text-red-500'
+                      }`}
+                    />
                     <div>
                       <p className="font-medium capitalize">{level} Energy</p>
                       <p className="text-sm text-gray-600">

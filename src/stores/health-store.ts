@@ -1,42 +1,44 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { createClient } from '@/lib/supabase/client';
-const supabase = createClient();
+import { create } from 'zustand'
+import { devtools } from 'zustand/middleware'
+import { api, isApiError, type ApiError } from '@/lib/api/client'
 
-export type MetricType = 
-  | 'weight' 
-  | 'sleep_hours' 
-  | 'steps' 
-  | 'heart_rate' 
+export type MetricType =
+  | 'weight'
+  | 'sleep_hours'
+  | 'steps'
+  | 'heart_rate'
   | 'blood_pressure_systolic'
   | 'blood_pressure_diastolic'
   | 'calories'
   | 'water_intake'
-  | 'exercise_minutes';
+  | 'exercise_minutes'
 
 export interface HealthMetric {
-  id: string;
-  user_id: string;
-  metric_type: MetricType;
-  value: number;
-  unit: string;
-  recorded_at: string;
-  notes?: string;
-  created_at: string;
+  id: string
+  user_id: string
+  metric_type: MetricType
+  value: number
+  unit: string
+  recorded_at: string
+  notes?: string
+  created_at: string
 }
 
 interface HealthStore {
-  metrics: HealthMetric[];
-  loading: boolean;
-  error: string | null;
-  
+  metrics: HealthMetric[]
+  loading: boolean
+  error: ApiError | null
+
   // Actions
-  fetchMetrics: (type?: MetricType, days?: number) => Promise<void>;
-  addMetric: (metric: Omit<HealthMetric, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
-  updateMetric: (id: string, updates: Partial<HealthMetric>) => Promise<void>;
-  deleteMetric: (id: string) => Promise<void>;
-  getLatestMetric: (type: MetricType) => HealthMetric | undefined;
-  getMetricsByDateRange: (type: MetricType, startDate: Date, endDate: Date) => HealthMetric[];
+  fetchMetrics: (type?: MetricType, days?: number) => Promise<void>
+  addMetric: (metric: Omit<HealthMetric, 'id' | 'user_id' | 'created_at'>) => Promise<void>
+  updateMetric: (id: string, updates: Partial<HealthMetric>) => Promise<void>
+  deleteMetric: (id: string) => Promise<void>
+  getLatestMetric: (type: MetricType) => HealthMetric | undefined
+  getMetricsByDateRange: (type: MetricType, startDate: Date, endDate: Date) => HealthMetric[]
+  
+  // Error management
+  clearError: () => void
 }
 
 export const useHealthStore = create<HealthStore>()(
@@ -47,115 +49,145 @@ export const useHealthStore = create<HealthStore>()(
       error: null,
 
       fetchMetrics: async (type?: MetricType, days: number = 30) => {
-        set({ loading: true, error: null });
-        try {
-          const startDate = new Date();
-          startDate.setDate(startDate.getDate() - days);
-          
-          let query = supabase
+        set({ loading: true, error: null })
+        
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - days)
+
+        let queryBuilder = () => {
+          let query = api.client
             .from('health_metrics')
             .select('*')
             .gte('recorded_at', startDate.toISOString())
-            .order('recorded_at', { ascending: false });
-          
+            .order('recorded_at', { ascending: false })
+
           if (type) {
-            query = query.eq('metric_type', type);
+            query = query.eq('metric_type', type)
           }
-          
-          const { data, error } = await query;
-          
-          if (error) throw error;
-          set({ metrics: data || [], loading: false });
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+
+          return query
         }
+
+        const result = await api.query(
+          queryBuilder,
+          { errorContext: 'Failed to fetch health metrics' }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
+        }
+
+        set({ metrics: result.data, loading: false })
       },
 
       addMetric: async (metric) => {
-        set({ loading: true, error: null });
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) throw new Error('Not authenticated');
+        set({ loading: true, error: null })
+        
+        const userResult = await api.query(
+          () => api.client.auth.getUser(),
+          { showToast: false }
+        )
 
-          const { data, error } = await supabase
+        if (isApiError(userResult) || !userResult.data.user) {
+          set({ loading: false, error: { message: 'Not authenticated' } })
+          return
+        }
+
+        const result = await api.mutate(
+          () => api.client
             .from('health_metrics')
             .insert({
               ...metric,
-              user_id: user.id,
+              user_id: userResult.data.user.id
             })
             .select()
-            .single();
-          
-          if (error) throw error;
-          
-          set(state => ({
-            metrics: [data, ...state.metrics],
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .single(),
+          { 
+            successMessage: 'Health metric recorded successfully',
+            errorContext: 'Failed to record health metric' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          metrics: [result.data, ...state.metrics],
+          loading: false
+        }))
       },
 
       updateMetric: async (id, updates) => {
-        set({ loading: true, error: null });
-        try {
-          const { data, error } = await supabase
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          () => api.client
             .from('health_metrics')
             .update(updates)
             .eq('id', id)
             .select()
-            .single();
-          
-          if (error) throw error;
-          
-          set(state => ({
-            metrics: state.metrics.map(m => m.id === id ? data : m),
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .single(),
+          { 
+            successMessage: 'Health metric updated successfully',
+            errorContext: 'Failed to update health metric' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          metrics: state.metrics.map((m) => (m.id === id ? result.data : m)),
+          loading: false
+        }))
       },
 
       deleteMetric: async (id) => {
-        set({ loading: true, error: null });
-        try {
-          const { error } = await supabase
-            .from('health_metrics')
-            .delete()
-            .eq('id', id);
-          
-          if (error) throw error;
-          
-          set(state => ({
-            metrics: state.metrics.filter(m => m.id !== id),
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          () => api.client.from('health_metrics').delete().eq('id', id),
+          { 
+            successMessage: 'Health metric deleted successfully',
+            errorContext: 'Failed to delete health metric' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          metrics: state.metrics.filter((m) => m.id !== id),
+          loading: false
+        }))
       },
 
       getLatestMetric: (type: MetricType) => {
-        const metrics = get().metrics;
+        const metrics = get().metrics
         return metrics
-          .filter(m => m.metric_type === type)
-          .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())[0];
+          .filter((m) => m.metric_type === type)
+          .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())[0]
       },
 
       getMetricsByDateRange: (type: MetricType, startDate: Date, endDate: Date) => {
-        const metrics = get().metrics;
+        const metrics = get().metrics
         return metrics
-          .filter(m => {
-            const date = new Date(m.recorded_at);
-            return m.metric_type === type && 
-                   date >= startDate && 
-                   date <= endDate;
+          .filter((m) => {
+            const date = new Date(m.recorded_at)
+            return m.metric_type === type && date >= startDate && date <= endDate
           })
-          .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime());
+          .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
       },
+      
+      clearError: () => set({ error: null })
     }),
     { name: 'health-store' }
   )
-);
+)

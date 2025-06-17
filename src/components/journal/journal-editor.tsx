@@ -1,22 +1,28 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { useJournalStore } from '@/stores/journal-store';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Lock, MapPin, Cloud, Tag, Calendar } from 'lucide-react';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from 'react'
+import { useJournalStore } from '@/stores/journal-store'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { Save, Lock, MapPin, Cloud, Tag, Calendar } from 'lucide-react'
+import { toast } from 'sonner'
+import { format } from 'date-fns'
 
 interface JournalEditorProps {
-  entryId?: string;
-  initialContent?: string;
-  onSave?: () => void;
-  onCancel?: () => void;
+  entryId?: string
+  initialContent?: string
+  onSave?: () => void
+  onCancel?: () => void
 }
 
 const moods = [
@@ -26,81 +32,86 @@ const moods = [
   { value: 'anxious', label: '😰 Anxious', color: 'bg-purple-100 text-purple-800' },
   { value: 'excited', label: '🎉 Excited', color: 'bg-green-100 text-green-800' },
   { value: 'angry', label: '😠 Angry', color: 'bg-red-100 text-red-800' },
-  { value: 'calm', label: '😌 Calm', color: 'bg-cyan-100 text-cyan-800' },
-];
+  { value: 'calm', label: '😌 Calm', color: 'bg-cyan-100 text-cyan-800' }
+]
 
-export function JournalEditor({ entryId, initialContent = '', onSave, onCancel }: JournalEditorProps) {
-  const { addEntry, updateEntry, encryptionKey, loading } = useJournalStore();
-  const [content, setContent] = useState(initialContent);
-  const [mood, setMood] = useState<string>('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
-  const [weather, setWeather] = useState('');
-  const [location, setLocation] = useState('');
-  const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0]);
+export function JournalEditor({
+  entryId,
+  initialContent = '',
+  onSave,
+  onCancel
+}: JournalEditorProps) {
+  const { addEntry, updateEntry, encryptionKey, loading } = useJournalStore()
+  const [content, setContent] = useState(initialContent)
+  const [mood, setMood] = useState<string>('')
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
+  const [weather, setWeather] = useState('')
+  const [location, setLocation] = useState('')
+  const [entryDate, setEntryDate] = useState(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
     if (!encryptionKey) {
-      toast.error('No encryption key set. Please set up encryption first.');
+      toast.error('No encryption key set. Please set up encryption first.')
     }
-  }, [encryptionKey]);
+  }, [encryptionKey])
 
   const handleSubmit = async () => {
     if (!content.trim()) {
-      toast.error('Please write something in your journal');
-      return;
+      toast.error('Please write something in your journal')
+      return
     }
 
     if (!encryptionKey) {
-      toast.error('No encryption key set');
-      return;
+      toast.error('No encryption key set')
+      return
     }
 
     try {
       if (entryId) {
         await updateEntry(entryId, {
           content,
-          mood: mood as any || undefined,
+          mood: (mood as any) || undefined,
           tags,
           weather: weather || undefined,
-          location: location || undefined,
-        });
-        toast.success('Journal entry updated');
+          location: location || undefined
+        })
+        toast.success('Journal entry updated')
       } else {
         await addEntry({
           content,
-          mood: mood as any || undefined,
+          mood: (mood as any) || undefined,
           tags,
           entry_date: entryDate,
           weather: weather || undefined,
-          location: location || undefined,
-        });
-        toast.success('Journal entry saved');
-        
+          location: location || undefined
+        })
+        toast.success('Journal entry saved')
+
         // Reset form
-        setContent('');
-        setMood('');
-        setTags([]);
-        setWeather('');
-        setLocation('');
+        setContent('')
+        setMood('')
+        setTags([])
+        setWeather('')
+        setLocation('')
       }
-      
-      onSave?.();
+
+      onSave?.()
     } catch (error) {
-      toast.error('Failed to save journal entry');
+      toast.error('Failed to save journal entry')
     }
-  };
+  }
 
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
+      setTags([...tags, tagInput.trim()])
+      setTagInput('')
     }
-  };
+  }
 
   const handleRemoveTag = (tag: string) => {
-    setTags(tags.filter(t => t !== tag));
-  };
+    setTags(tags.filter((t) => t !== tag))
+  }
 
   return (
     <Card>
@@ -135,9 +146,11 @@ export function JournalEditor({ entryId, initialContent = '', onSave, onCancel }
               <SelectValue placeholder="Select your mood" />
             </SelectTrigger>
             <SelectContent>
-              {moods.map(m => (
+              {moods.map((m) => (
                 <SelectItem key={m.value} value={m.value}>
-                  <span className={`inline-flex items-center gap-2 px-2 py-1 rounded-md ${m.color}`}>
+                  <span
+                    className={`inline-flex items-center gap-2 px-2 py-1 rounded-md ${m.color}`}
+                  >
                     {m.label}
                   </span>
                 </SelectItem>
@@ -158,7 +171,7 @@ export function JournalEditor({ entryId, initialContent = '', onSave, onCancel }
               placeholder="Sunny, rainy, cloudy..."
             />
           </div>
-          
+
           <div>
             <label className="text-sm font-medium mb-1 block flex items-center gap-1">
               <MapPin className="w-4 h-4" />
@@ -204,8 +217,13 @@ export function JournalEditor({ entryId, initialContent = '', onSave, onCancel }
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {tags.map(tag => (
-              <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => handleRemoveTag(tag)}>
+            {tags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="cursor-pointer"
+                onClick={() => handleRemoveTag(tag)}
+              >
                 {tag} ×
               </Badge>
             ))}
@@ -225,5 +243,5 @@ export function JournalEditor({ entryId, initialContent = '', onSave, onCancel }
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

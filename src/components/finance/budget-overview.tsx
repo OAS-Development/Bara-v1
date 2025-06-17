@@ -1,30 +1,30 @@
-'use client';
+'use client'
 
-import React, { useEffect } from 'react';
-import { useFinanceStore } from '@/stores/finance-store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { PieChart, DollarSign, AlertCircle, TrendingUp, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useEffect } from 'react'
+import { useFinanceStore } from '@/stores/finance-store'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
+import { PieChart, DollarSign, AlertCircle, TrendingUp, Plus } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface BudgetOverviewProps {
-  onAddBudget?: () => void;
+  onAddBudget?: () => void
 }
 
 export function BudgetOverview({ onAddBudget }: BudgetOverviewProps) {
-  const { budgets, fetchBudgets, getBudgetUsage } = useFinanceStore();
+  const { budgets, fetchBudgets, getBudgetUsage } = useFinanceStore()
 
   useEffect(() => {
-    fetchBudgets();
-  }, [fetchBudgets]);
+    fetchBudgets()
+  }, [fetchBudgets])
 
-  const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0);
+  const totalBudget = budgets.reduce((sum, budget) => sum + budget.amount, 0)
   const totalSpent = budgets.reduce((sum, budget) => {
-    const { spent } = getBudgetUsage(budget.id);
-    return sum + spent;
-  }, 0);
-  const overallPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+    const { spent } = getBudgetUsage(budget.id)
+    return sum + spent
+  }, 0)
+  const overallPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
   if (budgets.length === 0) {
     return (
@@ -48,7 +48,7 @@ export function BudgetOverview({ onAddBudget }: BudgetOverviewProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -68,12 +68,14 @@ export function BudgetOverview({ onAddBudget }: BudgetOverviewProps) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Overall Budget</span>
-            <span className={cn(
-              "text-sm font-medium",
-              overallPercentage > 100 && "text-red-500",
-              overallPercentage > 80 && overallPercentage <= 100 && "text-yellow-500",
-              overallPercentage <= 80 && "text-green-500"
-            )}>
+            <span
+              className={cn(
+                'text-sm font-medium',
+                overallPercentage > 100 && 'text-red-500',
+                overallPercentage > 80 && overallPercentage <= 100 && 'text-yellow-500',
+                overallPercentage <= 80 && 'text-green-500'
+              )}
+            >
               {overallPercentage.toFixed(0)}%
             </span>
           </div>
@@ -81,42 +83,42 @@ export function BudgetOverview({ onAddBudget }: BudgetOverviewProps) {
         </div>
 
         <div className="space-y-3">
-          {budgets.map(budget => {
-            const { spent, percentage } = getBudgetUsage(budget.id);
-            const isOverBudget = percentage > 100;
-            const isNearLimit = percentage > 80 && percentage <= 100;
-            
+          {budgets.map((budget) => {
+            const { spent, percentage } = getBudgetUsage(budget.id)
+            const isOverBudget = percentage > 100
+            const isNearLimit = percentage > 80 && percentage <= 100
+
             return (
               <div key={budget.id} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{budget.category}</span>
-                    {isOverBudget && (
-                      <AlertCircle className="w-4 h-4 text-red-500" />
-                    )}
+                    {isOverBudget && <AlertCircle className="w-4 h-4 text-red-500" />}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     ${spent.toFixed(2)} / ${budget.amount.toFixed(2)}
-                    <span className={cn(
-                      "ml-2 font-medium",
-                      isOverBudget && "text-red-500",
-                      isNearLimit && "text-yellow-500",
-                      !isOverBudget && !isNearLimit && "text-green-500"
-                    )}>
+                    <span
+                      className={cn(
+                        'ml-2 font-medium',
+                        isOverBudget && 'text-red-500',
+                        isNearLimit && 'text-yellow-500',
+                        !isOverBudget && !isNearLimit && 'text-green-500'
+                      )}
+                    >
                       ({percentage.toFixed(0)}%)
                     </span>
                   </div>
                 </div>
-                <Progress 
-                  value={Math.min(percentage, 100)} 
+                <Progress
+                  value={Math.min(percentage, 100)}
                   className={cn(
-                    "h-2",
-                    isOverBudget && "bg-red-100",
-                    isNearLimit && "bg-yellow-100"
+                    'h-2',
+                    isOverBudget && 'bg-red-100',
+                    isNearLimit && 'bg-yellow-100'
                   )}
                 />
               </div>
-            );
+            )
           })}
         </div>
 
@@ -128,5 +130,5 @@ export function BudgetOverview({ onAddBudget }: BudgetOverviewProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

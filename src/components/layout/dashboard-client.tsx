@@ -41,9 +41,9 @@ export function DashboardClient({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen bg-gray-900 text-gray-100">
         {/* Mobile Sidebar Button & Desktop Sidebar */}
         <MobileSidebar />
-        
+
         {/* Main Content - Flexible */}
-        <motion.main 
+        <motion.main
           className="flex-1 flex flex-col min-w-0 lg:pl-0 pl-14"
           initial="initial"
           animate="animate"
@@ -52,10 +52,10 @@ export function DashboardClient({ children }: { children: React.ReactNode }) {
         >
           <MainContent>{children}</MainContent>
         </motion.main>
-        
+
         {/* Inspector - 320px, collapsible */}
         {inspectorOpen && (
-          <motion.aside 
+          <motion.aside
             className="hidden xl:block w-80 border-l border-gray-800 flex-shrink-0"
             initial={{ x: 320 }}
             animate={{ x: 0 }}
@@ -66,22 +66,12 @@ export function DashboardClient({ children }: { children: React.ReactNode }) {
           </motion.aside>
         )}
       </div>
-      
-      <QuickEntryModal 
-        isOpen={quickEntryOpen}
-        onClose={() => setQuickEntryOpen(false)}
-      />
-      
-      <CommandPalette
-        isOpen={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-      />
-      
-      <HelpOverlay
-        isOpen={showHelp}
-        onClose={() => setShowHelp(false)}
-        shortcuts={shortcuts}
-      />
+
+      <QuickEntryModal isOpen={quickEntryOpen} onClose={() => setQuickEntryOpen(false)} />
+
+      <CommandPalette isOpen={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+
+      <HelpOverlay isOpen={showHelp} onClose={() => setShowHelp(false)} shortcuts={shortcuts} />
     </>
   )
 }

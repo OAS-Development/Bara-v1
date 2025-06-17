@@ -238,14 +238,14 @@ export class TaskParser {
 
   getSampleInputs(): string[] {
     return [
-      "Call John about the project tomorrow morning",
-      "Buy groceries at the store this evening",
-      "Review quarterly report due next week - high energy task",
-      "Quick email to client about meeting",
-      "Plan vacation next month when I have time",
-      "Urgent: Fix bug in production by end of day",
-      "Morning gym workout routine",
-      "Write blog post draft - needs focus time"
+      'Call John about the project tomorrow morning',
+      'Buy groceries at the store this evening',
+      'Review quarterly report due next week - high energy task',
+      'Quick email to client about meeting',
+      'Plan vacation next month when I have time',
+      'Urgent: Fix bug in production by end of day',
+      'Morning gym workout routine',
+      'Write blog post draft - needs focus time'
     ]
   }
 }

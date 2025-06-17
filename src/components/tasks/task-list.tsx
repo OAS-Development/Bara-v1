@@ -36,7 +36,7 @@ export function TaskList() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="flex-1 overflow-y-auto"
       variants={stagger}
       initial="initial"
@@ -44,10 +44,11 @@ export function TaskList() {
     >
       <AnimatePresence mode="popLayout">
         {tasks.map((task, index) => {
-          const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status === 'active'
-          const isDueToday = task.due_date && 
-            new Date(task.due_date).toDateString() === new Date().toDateString()
-          
+          const isOverdue =
+            task.due_date && new Date(task.due_date) < new Date() && task.status === 'active'
+          const isDueToday =
+            task.due_date && new Date(task.due_date).toDateString() === new Date().toDateString()
+
           return (
             <motion.div
               key={task.id}
@@ -73,77 +74,75 @@ export function TaskList() {
                 isOverdue && 'bg-red-950/20'
               )}
             >
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                toggleTask(task.id)
-              }}
-              className={cn(
-                "mt-0.5 flex-shrink-0",
-                touchTarget,
-                "flex items-center justify-center"
-              )}
-            >
-              {task.status === 'completed' ? (
-                <Check className="w-5 h-5 text-blue-500" />
-              ) : (
-                <Circle className="w-5 h-5 text-gray-600 hover:text-gray-400" />
-              )}
-            </button>
-          
-          <div className="flex-1 min-w-0">
-            <h3 className={cn(
-              'text-sm',
-              task.status === 'completed' && 'line-through text-gray-500'
-            )}>
-              {task.title}
-            </h3>
-            <div className="space-y-1 mt-1">
-              <div className="flex items-center gap-2">
-                {task.project_id && (
-                  <div className="flex items-center gap-1">
-                    <Folder className="h-3 w-3 text-gray-500" />
-                    <span className="text-xs text-gray-500">
-                      {projects.find(p => p.id === task.project_id)?.name || 'Unknown Project'}
-                    </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  toggleTask(task.id)
+                }}
+                className={cn(
+                  'mt-0.5 flex-shrink-0',
+                  touchTarget,
+                  'flex items-center justify-center'
+                )}
+              >
+                {task.status === 'completed' ? (
+                  <Check className="w-5 h-5 text-blue-500" />
+                ) : (
+                  <Circle className="w-5 h-5 text-gray-600 hover:text-gray-400" />
+                )}
+              </button>
+
+              <div className="flex-1 min-w-0">
+                <h3
+                  className={cn(
+                    'text-sm',
+                    task.status === 'completed' && 'line-through text-gray-500'
+                  )}
+                >
+                  {task.title}
+                </h3>
+                <div className="space-y-1 mt-1">
+                  <div className="flex items-center gap-2">
+                    {task.project_id && (
+                      <div className="flex items-center gap-1">
+                        <Folder className="h-3 w-3 text-gray-500" />
+                        <span className="text-xs text-gray-500">
+                          {projects.find((p) => p.id === task.project_id)?.name ||
+                            'Unknown Project'}
+                        </span>
+                      </div>
+                    )}
+                    {task.note && <span className="text-xs text-gray-500">• {task.note}</span>}
+                    {task.due_date && (
+                      <div
+                        className={cn(
+                          'flex items-center gap-1',
+                          isOverdue && 'text-red-400',
+                          isDueToday && !isOverdue && 'text-yellow-400'
+                        )}
+                      >
+                        {isOverdue && <AlertCircle className="h-3 w-3" />}
+                        <Calendar className="h-3 w-3" />
+                        <span className="text-xs">
+                          {new Date(task.due_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-                {task.note && (
-                  <span className="text-xs text-gray-500">• {task.note}</span>
-                )}
-                {task.due_date && (
-                  <div className={cn(
-                    "flex items-center gap-1",
-                    isOverdue && "text-red-400",
-                    isDueToday && !isOverdue && "text-yellow-400"
-                  )}>
-                    {isOverdue && <AlertCircle className="h-3 w-3" />}
-                    <Calendar className="h-3 w-3" />
-                    <span className="text-xs">
-                      {new Date(task.due_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {task.tags && task.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {task.tags.map(tagId => {
-                    const tag = tags.find(t => t.id === tagId)
-                    if (!tag) return null
-                    return (
-                      <TagChip
-                        key={tag.id}
-                        name={tag.name}
-                        color={tag.color}
-                        icon={tag.icon}
-                      />
-                    )
-                  })}
+                  {task.tags && task.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {task.tags.map((tagId) => {
+                        const tag = tags.find((t) => t.id === tagId)
+                        if (!tag) return null
+                        return (
+                          <TagChip key={tag.id} name={tag.name} color={tag.color} icon={tag.icon} />
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-          </motion.div>
+              </div>
+            </motion.div>
           )
         })}
       </AnimatePresence>

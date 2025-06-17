@@ -15,12 +15,15 @@ interface HelpOverlayProps {
 }
 
 export function HelpOverlay({ isOpen, onClose, shortcuts }: HelpOverlayProps) {
-  const groupedShortcuts = shortcuts.reduce((acc, shortcut) => {
-    const category = shortcut.keys[0] === 'g' ? 'Navigation' : 'Actions'
-    if (!acc[category]) acc[category] = []
-    acc[category].push(shortcut)
-    return acc
-  }, {} as Record<string, typeof shortcuts>)
+  const groupedShortcuts = shortcuts.reduce(
+    (acc, shortcut) => {
+      const category = shortcut.keys[0] === 'g' ? 'Navigation' : 'Actions'
+      if (!acc[category]) acc[category] = []
+      acc[category].push(shortcut)
+      return acc
+    },
+    {} as Record<string, typeof shortcuts>
+  )
 
   return (
     <AnimatePresence>
@@ -33,7 +36,7 @@ export function HelpOverlay({ isOpen, onClose, shortcuts }: HelpOverlayProps) {
             onClick={onClose}
             className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
           />
-          
+
           <motion.div
             variants={scaleIn}
             initial="initial"
@@ -54,7 +57,7 @@ export function HelpOverlay({ isOpen, onClose, shortcuts }: HelpOverlayProps) {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              
+
               <div className="p-6 overflow-y-auto">
                 {Object.entries(groupedShortcuts).map(([category, categoryShortcuts]) => (
                   <div key={category} className="mb-8">
@@ -85,10 +88,14 @@ export function HelpOverlay({ isOpen, onClose, shortcuts }: HelpOverlayProps) {
                     </div>
                   </div>
                 ))}
-                
+
                 <div className="mt-8 p-4 bg-blue-900/20 border border-blue-800/50 rounded-lg">
                   <p className="text-sm text-blue-400">
-                    <strong>Pro tip:</strong> Press <kbd className="px-1 py-0.5 text-xs font-mono bg-gray-700 border border-gray-600 rounded">?</kbd> anytime to show this help
+                    <strong>Pro tip:</strong> Press{' '}
+                    <kbd className="px-1 py-0.5 text-xs font-mono bg-gray-700 border border-gray-600 rounded">
+                      ?
+                    </kbd>{' '}
+                    anytime to show this help
                   </p>
                 </div>
               </div>

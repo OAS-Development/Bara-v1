@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useTaskStore } from '@/stores/task-store'
 import { createClient } from '@/lib/supabase/client'
 import { Database } from '@/types/database.types'
@@ -24,11 +24,7 @@ export function TodayView() {
   const { tags } = useTagStore()
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchTodayTasks()
-  }, [])
-
-  const fetchTodayTasks = async () => {
+  const fetchTodayTasks = useCallback(async () => {
     setLoading(true)
     const now = new Date()
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
@@ -53,30 +49,39 @@ export function TodayView() {
     }
 
     // Filter for tasks that are actually due today or overdue
-    const todayTasks = tasks?.filter(task => {
-      const isDueToday = task.due_date && 
-        new Date(task.due_date) >= new Date(todayStart) && 
-        new Date(task.due_date) < new Date(todayEnd)
-      const isOverdue = task.due_date && new Date(task.due_date) < new Date(todayStart)
-      const isAvailable = !task.defer_date || new Date(task.defer_date) <= now
-      
-      return (isDueToday || isOverdue) && isAvailable
-    }) || []
+    const todayTasks =
+      tasks?.filter((task) => {
+        const isDueToday =
+          task.due_date &&
+          new Date(task.due_date) >= new Date(todayStart) &&
+          new Date(task.due_date) < new Date(todayEnd)
+        const isOverdue = task.due_date && new Date(task.due_date) < new Date(todayStart)
+        const isAvailable = !task.defer_date || new Date(task.defer_date) <= now
+
+        return (isDueToday || isOverdue) && isAvailable
+      }) || []
 
     // Fetch tags for tasks
     if (todayTasks.length > 0) {
       const { data: taskTags } = await supabase
         .from('task_tags')
         .select('task_id, tag_id')
-        .in('task_id', todayTasks.map(t => t.id))
+        .in(
+          'task_id',
+          todayTasks.map((t) => t.id)
+        )
 
-      const tagsByTask = taskTags?.reduce((acc, tt) => {
-        if (!acc[tt.task_id]) acc[tt.task_id] = []
-        acc[tt.task_id].push(tt.tag_id)
-        return acc
-      }, {} as Record<string, string[]>) || {}
+      const tagsByTask =
+        taskTags?.reduce(
+          (acc, tt) => {
+            if (!acc[tt.task_id]) acc[tt.task_id] = []
+            acc[tt.task_id].push(tt.tag_id)
+            return acc
+          },
+          {} as Record<string, string[]>
+        ) || {}
 
-      const tasksWithTags = todayTasks.map(task => ({
+      const tasksWithTags = todayTasks.map((task) => ({
         ...task,
         tags: tagsByTask[task.id] || []
       }))
@@ -85,9 +90,13 @@ export function TodayView() {
     } else {
       setTasks([])
     }
-    
+
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchTodayTasks()
+  }, [fetchTodayTasks])
 
   if (loading) {
     return (
@@ -115,10 +124,10 @@ export function TodayView() {
           {tasks.length} task{tasks.length !== 1 ? 's' : ''} due today
         </p>
       </div>
-      
+
       {tasks.map((task) => {
         const isOverdue = task.due_date && new Date(task.due_date) < new Date()
-        
+
         return (
           <div
             key={task.id}
@@ -142,12 +151,14 @@ export function TodayView() {
                 <Circle className="w-5 h-5 text-gray-600 hover:text-gray-400" />
               )}
             </button>
-            
+
             <div className="flex-1 min-w-0">
-              <h3 className={cn(
-                'text-sm',
-                task.status === 'completed' && 'line-through text-gray-500'
-              )}>
+              <h3
+                className={cn(
+                  'text-sm',
+                  task.status === 'completed' && 'line-through text-gray-500'
+                )}
+              >
                 {task.title}
               </h3>
               <div className="space-y-1 mt-1">
@@ -156,7 +167,7 @@ export function TodayView() {
                     <div className="flex items-center gap-1">
                       <Folder className="h-3 w-3 text-gray-500" />
                       <span className="text-xs text-gray-500">
-                        {projects.find(p => p.id === task.project_id)?.name || 'Unknown Project'}
+                        {projects.find((p) => p.id === task.project_id)?.name || 'Unknown Project'}
                       </span>
                     </div>
                   )}
@@ -169,16 +180,11 @@ export function TodayView() {
                 </div>
                 {task.tags && task.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {task.tags.map(tagId => {
-                      const tag = tags.find(t => t.id === tagId)
+                    {task.tags.map((tagId) => {
+                      const tag = tags.find((t) => t.id === tagId)
                       if (!tag) return null
                       return (
-                        <TagChip
-                          key={tag.id}
-                          name={tag.name}
-                          color={tag.color}
-                          icon={tag.icon}
-                        />
+                        <TagChip key={tag.id} name={tag.name} color={tag.color} icon={tag.icon} />
                       )
                     })}
                   </div>

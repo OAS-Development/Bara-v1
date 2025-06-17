@@ -7,7 +7,7 @@ type Project = Database['public']['Tables']['projects']['Row']
 
 export function useTasks() {
   const supabase = createClient()
-  
+
   return useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
@@ -16,7 +16,7 @@ export function useTasks() {
         .select('*, project:projects(*), tags:task_tags(tag:tags(*))')
         .eq('status', 'active')
         .order('position')
-      
+
       if (error) throw error
       return data
     }
@@ -26,15 +26,11 @@ export function useTasks() {
 export function useCreateTask() {
   const queryClient = useQueryClient()
   const supabase = createClient()
-  
+
   return useMutation({
     mutationFn: async (task: Partial<Task>) => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert(task)
-        .select()
-        .single()
-      
+      const { data, error } = await supabase.from('tasks').insert(task).select().single()
+
       if (error) throw error
       return data
     },

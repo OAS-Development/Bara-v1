@@ -34,7 +34,7 @@ export function ImportMappingConfig({
       {/* Configuration Options */}
       <div className="bg-white border rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-4">Import Options</h3>
-        
+
         <div className="space-y-4">
           {/* Duplicate Strategy */}
           <div>
@@ -62,7 +62,9 @@ export function ImportMappingConfig({
                   onChange={(e) => updateOptions({ duplicateStrategy: 'create-new' })}
                   className="mr-2"
                 />
-                <span className="text-sm">Create new items with &ldquo;(imported)&rdquo; suffix</span>
+                <span className="text-sm">
+                  Create new items with &ldquo;(imported)&rdquo; suffix
+                </span>
               </label>
               <label className="flex items-center">
                 <input
@@ -87,9 +89,7 @@ export function ImportMappingConfig({
                 onChange={(e) => updateOptions({ importCompleted: e.target.checked })}
                 className="mr-2"
               />
-              <span className="text-sm font-medium text-gray-700">
-                Import completed tasks
-              </span>
+              <span className="text-sm font-medium text-gray-700">Import completed tasks</span>
             </label>
             <p className="text-xs text-gray-500 ml-6 mt-1">
               Include tasks that are already marked as completed
@@ -140,9 +140,7 @@ export function ImportMappingConfig({
             <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800">
               <h4 className="font-semibold mb-2">New Tags Will Be Created</h4>
-              <p className="mb-2">
-                The following OmniFocus contexts will be imported as new tags:
-              </p>
+              <p className="mb-2">The following OmniFocus contexts will be imported as new tags:</p>
               <div className="flex flex-wrap gap-2">
                 {unmappedContexts.map((context) => (
                   <span
@@ -165,12 +163,12 @@ export function ImportMappingConfig({
             <Info className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-gray-800">
               <h4 className="font-semibold mb-2">Duplicate Task Names Detected</h4>
-              <p className="mb-2">
-                The following task names appear multiple times:
-              </p>
+              <p className="mb-2">The following task names appear multiple times:</p>
               <ul className="list-disc list-inside space-y-1">
                 {duplicateTasks.slice(0, 10).map((task, index) => (
-                  <li key={index} className="text-xs">{task}</li>
+                  <li key={index} className="text-xs">
+                    {task}
+                  </li>
                 ))}
                 {duplicateTasks.length > 10 && (
                   <li className="text-xs text-gray-500">

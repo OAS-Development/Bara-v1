@@ -6,6 +6,11 @@ export type Task = Database['public']['Tables']['tasks']['Row']
 export type TaskInsert = Database['public']['Tables']['tasks']['Insert']
 export type TaskUpdate = Database['public']['Tables']['tasks']['Update']
 
+// Extended types
+export interface TaskWithTags extends Task {
+  tags?: string[]
+}
+
 export type Project = Database['public']['Tables']['projects']['Row']
 export type ProjectInsert = Database['public']['Tables']['projects']['Insert']
 export type ProjectUpdate = Database['public']['Tables']['projects']['Update']

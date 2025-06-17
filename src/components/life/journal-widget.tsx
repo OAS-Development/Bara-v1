@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import { useJournalStore } from '@/stores/journal-store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Lock, Calendar, SmilePlus, Edit } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { format, startOfWeek, endOfWeek } from 'date-fns';
+import React, { useEffect, useState } from 'react'
+import { useJournalStore } from '@/stores/journal-store'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Lock, Calendar, SmilePlus, Edit } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { format, startOfWeek, endOfWeek } from 'date-fns'
 
 const moodEmojis = {
   happy: '😊',
@@ -16,48 +16,52 @@ const moodEmojis = {
   anxious: '😰',
   excited: '🎉',
   angry: '😠',
-  calm: '😌',
-};
+  calm: '😌'
+}
 
 export function JournalWidget() {
-  const router = useRouter();
-  const { entries, encryptionKey } = useJournalStore();
-  const [recentEntry, setRecentEntry] = useState<string | null>(null);
-  
-  const todayEntry = entries.find(e => e.entry_date === new Date().toISOString().split('T')[0]);
-  const weekStart = startOfWeek(new Date());
-  const weekEnd = endOfWeek(new Date());
-  const weekEntries = entries.filter(e => {
-    const date = new Date(e.entry_date);
-    return date >= weekStart && date <= weekEnd;
-  });
+  const router = useRouter()
+  const { entries, encryptionKey } = useJournalStore()
+  const [recentEntry, setRecentEntry] = useState<string | null>(null)
 
-  const moodCounts = weekEntries.reduce((acc, entry) => {
-    if (entry.mood) {
-      acc[entry.mood] = (acc[entry.mood] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const todayEntry = entries.find((e) => e.entry_date === new Date().toISOString().split('T')[0])
+  const weekStart = startOfWeek(new Date())
+  const weekEnd = endOfWeek(new Date())
+  const weekEntries = entries.filter((e) => {
+    const date = new Date(e.entry_date)
+    return date >= weekStart && date <= weekEnd
+  })
 
-  const dominantMood = Object.entries(moodCounts).reduce((prev, [mood, count]) => 
-    count > (prev.count || 0) ? { mood, count } : prev, { mood: '', count: 0 }
-  );
+  const moodCounts = weekEntries.reduce(
+    (acc, entry) => {
+      if (entry.mood) {
+        acc[entry.mood] = (acc[entry.mood] || 0) + 1
+      }
+      return acc
+    },
+    {} as Record<string, number>
+  )
+
+  const dominantMood = Object.entries(moodCounts).reduce(
+    (prev, [mood, count]) => (count > (prev.count || 0) ? { mood, count } : prev),
+    { mood: '', count: 0 }
+  )
 
   useEffect(() => {
     const loadRecentEntry = async () => {
-      const recent = entries[0];
+      const recent = entries[0]
       if (recent && encryptionKey) {
         try {
-          const decrypted = await useJournalStore.getState().decryptEntry(recent.id);
-          setRecentEntry(decrypted.slice(0, 100) + (decrypted.length > 100 ? '...' : ''));
+          const decrypted = await useJournalStore.getState().decryptEntry(recent.id)
+          setRecentEntry(decrypted.slice(0, 100) + (decrypted.length > 100 ? '...' : ''))
         } catch (error) {
-          setRecentEntry(null);
+          setRecentEntry(null)
         }
       }
-    };
-    
-    loadRecentEntry();
-  }, [entries, encryptionKey]);
+    }
+
+    loadRecentEntry()
+  }, [entries, encryptionKey])
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -67,11 +71,7 @@ export function JournalWidget() {
             <Lock className="w-5 h-5 text-cyan-500" />
             Journal & Reflection
           </span>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => router.push('/life/journal')}
-          >
+          <Button variant="ghost" size="sm" onClick={() => router.push('/life/journal')}>
             View All →
           </Button>
         </CardTitle>
@@ -97,16 +97,12 @@ export function JournalWidget() {
                 <Calendar className="w-4 h-4" />
                 Today&apos;s Entry
               </span>
-              {todayEntry.mood && (
-                <span className="text-lg">{moodEmojis[todayEntry.mood]}</span>
-              )}
+              {todayEntry.mood && <span className="text-lg">{moodEmojis[todayEntry.mood]}</span>}
             </div>
-            {recentEntry && (
-              <p className="text-sm text-muted-foreground">{recentEntry}</p>
-            )}
+            {recentEntry && <p className="text-sm text-muted-foreground">{recentEntry}</p>}
             {todayEntry.tags.length > 0 && (
               <div className="flex gap-1 mt-2">
-                {todayEntry.tags.slice(0, 3).map(tag => (
+                {todayEntry.tags.slice(0, 3).map((tag) => (
                   <Badge key={tag} variant="secondary" className="text-xs">
                     {tag}
                   </Badge>
@@ -122,18 +118,18 @@ export function JournalWidget() {
         )}
 
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={() => router.push('/life/journal?action=new')}
           >
             <Edit className="w-4 h-4 mr-1" />
             Write Entry
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={() => router.push('/life/journal?view=mood')}
           >
@@ -143,5 +139,5 @@ export function JournalWidget() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

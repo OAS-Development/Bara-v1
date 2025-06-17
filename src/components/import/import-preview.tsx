@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import { OmniFocusParser, OmniFocusData } from '@/lib/import/omnifocus-parser'
 import { ImportMapper } from '@/lib/import/import-mapper'
-import { ImportExecutor, ImportProgress, ImportResult, ImportOptions } from '@/lib/import/import-executor'
+import {
+  ImportExecutor,
+  ImportProgress,
+  ImportResult,
+  ImportOptions
+} from '@/lib/import/import-executor'
 import { ImportMappingConfig } from './import-mapping-config'
 import { ImportProgress as ImportProgressDisplay } from './import-progress'
 import { ImportReport } from './import-report'
@@ -35,6 +40,7 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
 
   useEffect(() => {
     parseFile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const parseFile = async () => {
@@ -46,16 +52,20 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
       const parser = new OmniFocusParser()
       const data = await parser.parseArchive(file)
       const stats = parser.getStatistics(data)
-      
+
       setParsedData(data)
       setStatistics(stats)
-      
+
       // Validate with default options
-      const { data: { user } } = await (await import('@supabase/auth-helpers-nextjs')).createClientComponentClient().auth.getUser()
+      const {
+        data: { user }
+      } = await (await import('@supabase/auth-helpers-nextjs'))
+        .createClientComponentClient()
+        .auth.getUser()
       const mapper = new ImportMapper({ ...importOptions, userId: user?.id || '' })
       const validationResult = mapper.validateMapping(data)
       setValidation(validationResult)
-      
+
       setPhase('preview')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse file')
@@ -69,7 +79,11 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
     if (parsedData) {
       // Re-validate with new options
       const validateAsync = async () => {
-        const { data: { user } } = await (await import('@supabase/auth-helpers-nextjs')).createClientComponentClient().auth.getUser()
+        const {
+          data: { user }
+        } = await (await import('@supabase/auth-helpers-nextjs'))
+          .createClientComponentClient()
+          .auth.getUser()
         const mapper = new ImportMapper({ ...newOptions, userId: user?.id || '' })
         const validationResult = mapper.validateMapping(parsedData)
         setValidation(validationResult)
@@ -91,7 +105,7 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
       })
       const result = await executor.execute(parsedData)
       const report = executor.generateReport(result, parsedData)
-      
+
       setImportResult(result)
       setImportReport(report)
       setPhase('complete')
@@ -164,7 +178,7 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
     return (
       <div className="p-8">
         <h2 className="text-xl font-semibold mb-6">Import Complete</h2>
-        <ImportReport 
+        <ImportReport
           result={importResult}
           report={importReport}
           onDownload={handleDownloadReport}
@@ -181,7 +195,7 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
     <div className="space-y-6">
       <div className="bg-gray-50 rounded-lg p-6">
         <h3 className="text-lg font-semibold mb-4">Import Preview</h3>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-4 text-center">
             <Folder className="h-8 w-8 text-blue-500 mx-auto mb-2" />
@@ -189,20 +203,20 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
             <p className="text-sm text-gray-600">Projects</p>
             <p className="text-xs text-gray-500">{statistics.activeProjects} active</p>
           </div>
-          
+
           <div className="bg-white rounded-lg p-4 text-center">
             <FileText className="h-8 w-8 text-green-500 mx-auto mb-2" />
             <p className="text-2xl font-bold">{statistics.totalTasks}</p>
             <p className="text-sm text-gray-600">Tasks</p>
             <p className="text-xs text-gray-500">{statistics.completedTasks} completed</p>
           </div>
-          
+
           <div className="bg-white rounded-lg p-4 text-center">
             <Tag className="h-8 w-8 text-purple-500 mx-auto mb-2" />
             <p className="text-2xl font-bold">{statistics.totalContexts}</p>
             <p className="text-sm text-gray-600">Contexts</p>
           </div>
-          
+
           <div className="bg-white rounded-lg p-4 text-center">
             <CheckCircle className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
             <p className="text-2xl font-bold">{statistics.completionRate}%</p>
@@ -223,8 +237,9 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h4 className="font-medium text-blue-900 mb-3">Ready to Import?</h4>
         <p className="text-sm text-blue-800 mb-4">
-          This will create {statistics.totalProjects} projects and {statistics.totalTasks} tasks in your Bara workspace.
-          The import process may take a few moments depending on the size of your archive.
+          This will create {statistics.totalProjects} projects and {statistics.totalTasks} tasks in
+          your Bara workspace. The import process may take a few moments depending on the size of
+          your archive.
         </p>
         <div className="flex gap-3">
           <button

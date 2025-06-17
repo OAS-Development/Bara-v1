@@ -12,12 +12,10 @@ export function Inspector() {
           <X className="w-4 h-4" />
         </button>
       </div>
-      
+
       {/* Content */}
       <div className="flex-1 p-4">
-        <p className="text-sm text-gray-500">
-          Select a task to view details
-        </p>
+        <p className="text-sm text-gray-500">Select a task to view details</p>
       </div>
     </div>
   )

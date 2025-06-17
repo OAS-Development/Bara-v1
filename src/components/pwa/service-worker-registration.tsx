@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 
 export function ServiceWorkerRegistration() {
   useEffect(() => {
@@ -10,7 +10,7 @@ export function ServiceWorkerRegistration() {
         navigator.serviceWorker.register('/sw.js').then(
           (registration) => {
             console.log('ServiceWorker registration successful')
-            
+
             // Handle updates
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing

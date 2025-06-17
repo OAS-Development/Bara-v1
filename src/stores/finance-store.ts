@@ -1,82 +1,85 @@
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { createClient } from '@/lib/supabase/client';
-const supabase = createClient();
+import { create } from 'zustand'
+import { api, isApiError, type ApiError } from '@/lib/api/client'
 
 export interface FinancialAccount {
-  id: string;
-  user_id: string;
-  name: string;
-  type: 'checking' | 'savings' | 'credit' | 'investment' | 'loan';
-  balance?: number;
-  currency: string;
-  institution?: string;
-  account_number_last4?: string;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
+  id: string
+  user_id: string
+  name: string
+  type: 'checking' | 'savings' | 'credit' | 'investment' | 'loan'
+  balance?: number
+  currency: string
+  institution?: string
+  account_number_last4?: string
+  active: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface FinancialTransaction {
-  id: string;
-  account_id: string;
-  amount: number;
-  type: 'income' | 'expense' | 'transfer';
-  category?: string;
-  description?: string;
-  transaction_date: string;
-  created_at: string;
-  updated_at: string;
+  id: string
+  account_id: string
+  amount: number
+  type: 'income' | 'expense' | 'transfer'
+  category?: string
+  description?: string
+  transaction_date: string
+  created_at: string
+  updated_at: string
 }
 
 export interface Budget {
-  id: string;
-  user_id: string;
-  category: string;
-  amount: number;
-  period: 'monthly' | 'yearly';
-  start_date: string;
-  end_date?: string;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
+  id: string
+  user_id: string
+  category: string
+  amount: number
+  period: 'monthly' | 'yearly'
+  start_date: string
+  end_date?: string
+  active: boolean
+  created_at: string
+  updated_at: string
 }
 
 interface FinanceStore {
-  accounts: FinancialAccount[];
-  transactions: FinancialTransaction[];
-  budgets: Budget[];
-  loading: boolean;
-  error: string | null;
-  
+  accounts: FinancialAccount[]
+  transactions: FinancialTransaction[]
+  budgets: Budget[]
+  loading: boolean
+  error: ApiError | null
+
   // Account actions
-  fetchAccounts: () => Promise<void>;
-  addAccount: (account: Omit<FinancialAccount, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateAccount: (id: string, updates: Partial<FinancialAccount>) => Promise<void>;
-  deleteAccount: (id: string) => Promise<void>;
-  
+  fetchAccounts: () => Promise<void>
+  addAccount: (
+    account: Omit<FinancialAccount, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ) => Promise<void>
+  updateAccount: (id: string, updates: Partial<FinancialAccount>) => Promise<void>
+  deleteAccount: (id: string) => Promise<void>
+
   // Transaction actions
-  fetchTransactions: (accountId?: string, days?: number) => Promise<void>;
-  addTransaction: (transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateTransaction: (id: string, updates: Partial<FinancialTransaction>) => Promise<void>;
-  deleteTransaction: (id: string) => Promise<void>;
-  
+  fetchTransactions: (accountId?: string, days?: number) => Promise<void>
+  addTransaction: (
+    transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at'>
+  ) => Promise<void>
+  updateTransaction: (id: string, updates: Partial<FinancialTransaction>) => Promise<void>
+  deleteTransaction: (id: string) => Promise<void>
+
   // Budget actions
-  fetchBudgets: () => Promise<void>;
-  addBudget: (budget: Omit<Budget, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  updateBudget: (id: string, updates: Partial<Budget>) => Promise<void>;
-  deleteBudget: (id: string) => Promise<void>;
-  
+  fetchBudgets: () => Promise<void>
+  addBudget: (budget: Omit<Budget, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>
+  updateBudget: (id: string, updates: Partial<Budget>) => Promise<void>
+  deleteBudget: (id: string) => Promise<void>
+
   // Computed
-  getTotalBalance: () => number;
-  getAccountBalance: (accountId: string) => number;
-  getCategorySpending: (category: string, period: 'month' | 'year') => number;
-  getBudgetUsage: (budgetId: string) => { spent: number; percentage: number };
+  getTotalBalance: () => number
+  getAccountBalance: (accountId: string) => number
+  getCategorySpending: (category: string, period: 'month' | 'year') => number
+  getBudgetUsage: (budgetId: string) => { spent: number; percentage: number }
+  
+  // Error management
+  clearError: () => void
 }
 
-export const useFinanceStore = create<FinanceStore>()(
-  devtools(
-    (set, get) => ({
+export const useFinanceStore = create<FinanceStore>((set, get) => ({
       accounts: [],
       transactions: [],
       budgets: [],
@@ -85,50 +88,68 @@ export const useFinanceStore = create<FinanceStore>()(
 
       // Account actions
       fetchAccounts: async () => {
-        set({ loading: true, error: null });
-        try {
-          const { data, error } = await supabase
+        set({ loading: true, error: null })
+        
+        const result = await api.query(
+          async () => api.client
             .from('financial_accounts')
             .select('*')
-            .order('created_at', { ascending: false });
-          
-          if (error) throw error;
-          set({ accounts: data || [], loading: false });
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .order('created_at', { ascending: false }),
+          { errorContext: 'Failed to fetch accounts' }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set({ accounts: result.data, loading: false })
       },
 
       addAccount: async (account) => {
-        set({ loading: true, error: null });
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) throw new Error('Not authenticated');
+        set({ loading: true, error: null })
+        
+        const userResult = await api.query(
+          () => api.client.auth.getUser(),
+          { showToast: false }
+        )
 
-          const { data, error } = await supabase
+        if (isApiError(userResult) || !userResult.data.user) {
+          set({ loading: false, error: { message: 'Not authenticated' } })
+          return
+        }
+
+        const result = await api.mutate(
+          async () => api.client
             .from('financial_accounts')
             .insert({
               ...account,
-              user_id: user.id,
+              user_id: userResult.data.user.id
             })
             .select()
-            .single();
-          
-          if (error) throw error;
-          
-          set(state => ({
-            accounts: [data, ...state.accounts],
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .single(),
+          { 
+            successMessage: 'Account created successfully',
+            errorContext: 'Failed to create account' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          accounts: [result.data, ...state.accounts],
+          loading: false
+        }))
       },
 
       updateAccount: async (id, updates) => {
-        set({ loading: true, error: null });
-        try {
-          const { data, error } = await supabase
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          async () => api.client
             .from('financial_accounts')
             .update({
               ...updates,
@@ -136,101 +157,123 @@ export const useFinanceStore = create<FinanceStore>()(
             })
             .eq('id', id)
             .select()
-            .single();
-          
-          if (error) throw error;
-          
-          set(state => ({
-            accounts: state.accounts.map(a => a.id === id ? data : a),
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .single(),
+          { 
+            successMessage: 'Account updated successfully',
+            errorContext: 'Failed to update account' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          accounts: state.accounts.map((a) => (a.id === id ? result.data : a)),
+          loading: false
+        }))
       },
 
       deleteAccount: async (id) => {
-        set({ loading: true, error: null });
-        try {
-          const { error } = await supabase
-            .from('financial_accounts')
-            .delete()
-            .eq('id', id);
-          
-          if (error) throw error;
-          
-          set(state => ({
-            accounts: state.accounts.filter(a => a.id !== id),
-            transactions: state.transactions.filter(t => t.account_id !== id),
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          async () => api.client.from('financial_accounts').delete().eq('id', id),
+          { 
+            successMessage: 'Account deleted successfully',
+            errorContext: 'Failed to delete account' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          accounts: state.accounts.filter((a) => a.id !== id),
+          transactions: state.transactions.filter((t) => t.account_id !== id),
+          loading: false
+        }))
       },
 
       // Transaction actions
       fetchTransactions: async (accountId?: string, days: number = 30) => {
-        set({ loading: true, error: null });
-        try {
-          const startDate = new Date();
-          startDate.setDate(startDate.getDate() - days);
-          
-          let query = supabase
+        set({ loading: true, error: null })
+        
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - days)
+
+        let queryBuilder = async () => {
+          let query = api.client
             .from('financial_transactions')
             .select('*')
             .gte('transaction_date', startDate.toISOString().split('T')[0])
-            .order('transaction_date', { ascending: false });
-          
+            .order('transaction_date', { ascending: false })
+
           if (accountId) {
-            query = query.eq('account_id', accountId);
+            query = query.eq('account_id', accountId)
           }
-          
-          const { data, error } = await query;
-          
-          if (error) throw error;
-          set({ transactions: data || [], loading: false });
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+
+          return query
         }
+
+        const result = await api.query(
+          queryBuilder,
+          { errorContext: 'Failed to fetch transactions' }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
+        }
+
+        set({ transactions: result.data, loading: false })
       },
 
       addTransaction: async (transaction) => {
-        set({ loading: true, error: null });
-        try {
-          const { data, error } = await supabase
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          async () => api.client
             .from('financial_transactions')
             .insert(transaction)
             .select()
-            .single();
-          
-          if (error) throw error;
-          
-          // Update account balance if needed
-          const account = get().accounts.find(a => a.id === transaction.account_id);
-          if (account && account.balance !== undefined) {
-            const balanceChange = transaction.type === 'income' 
-              ? transaction.amount 
-              : -transaction.amount;
-            
-            await get().updateAccount(account.id, {
-              balance: account.balance + balanceChange
-            });
+            .single(),
+          { 
+            successMessage: 'Transaction added successfully',
+            errorContext: 'Failed to add transaction' 
           }
-          
-          set(state => ({
-            transactions: [data, ...state.transactions],
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        // Update account balance if needed
+        const account = get().accounts.find((a) => a.id === transaction.account_id)
+        if (account && account.balance !== undefined) {
+          const balanceChange =
+            transaction.type === 'income' ? transaction.amount : -transaction.amount
+
+          await get().updateAccount(account.id, {
+            balance: account.balance + balanceChange
+          })
+        }
+
+        set((state) => ({
+          transactions: [result.data, ...state.transactions],
+          loading: false
+        }))
       },
 
       updateTransaction: async (id, updates) => {
-        set({ loading: true, error: null });
-        try {
-          const { data, error } = await supabase
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          async () => api.client
             .from('financial_transactions')
             .update({
               ...updates,
@@ -238,85 +281,111 @@ export const useFinanceStore = create<FinanceStore>()(
             })
             .eq('id', id)
             .select()
-            .single();
-          
-          if (error) throw error;
-          
-          set(state => ({
-            transactions: state.transactions.map(t => t.id === id ? data : t),
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .single(),
+          { 
+            successMessage: 'Transaction updated successfully',
+            errorContext: 'Failed to update transaction' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          transactions: state.transactions.map((t) => (t.id === id ? result.data : t)),
+          loading: false
+        }))
       },
 
       deleteTransaction: async (id) => {
-        set({ loading: true, error: null });
-        try {
-          const { error } = await supabase
-            .from('financial_transactions')
-            .delete()
-            .eq('id', id);
-          
-          if (error) throw error;
-          
-          set(state => ({
-            transactions: state.transactions.filter(t => t.id !== id),
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          async () => api.client.from('financial_transactions').delete().eq('id', id),
+          { 
+            successMessage: 'Transaction deleted successfully',
+            errorContext: 'Failed to delete transaction' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          transactions: state.transactions.filter((t) => t.id !== id),
+          loading: false
+        }))
       },
 
       // Budget actions
       fetchBudgets: async () => {
-        set({ loading: true, error: null });
-        try {
-          const { data, error } = await supabase
+        set({ loading: true, error: null })
+        
+        const result = await api.query(
+          () => api.client
             .from('budgets')
             .select('*')
             .eq('active', true)
-            .order('category');
-          
-          if (error) throw error;
-          set({ budgets: data || [], loading: false });
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .order('category'),
+          { errorContext: 'Failed to fetch budgets' }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set({ budgets: result.data, loading: false })
       },
 
       addBudget: async (budget) => {
-        set({ loading: true, error: null });
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) throw new Error('Not authenticated');
+        set({ loading: true, error: null })
+        
+        const userResult = await api.query(
+          () => api.client.auth.getUser(),
+          { showToast: false }
+        )
 
-          const { data, error } = await supabase
+        if (isApiError(userResult) || !userResult.data.user) {
+          set({ loading: false, error: { message: 'Not authenticated' } })
+          return
+        }
+
+        const result = await api.mutate(
+          async () => api.client
             .from('budgets')
             .insert({
               ...budget,
-              user_id: user.id,
+              user_id: userResult.data.user.id
             })
             .select()
-            .single();
-          
-          if (error) throw error;
-          
-          set(state => ({
-            budgets: [...state.budgets, data],
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .single(),
+          { 
+            successMessage: 'Budget created successfully',
+            errorContext: 'Failed to create budget' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          budgets: [...state.budgets, result.data],
+          loading: false
+        }))
       },
 
       updateBudget: async (id, updates) => {
-        set({ loading: true, error: null });
-        try {
-          const { data, error } = await supabase
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          async () => api.client
             .from('budgets')
             .update({
               ...updates,
@@ -324,85 +393,91 @@ export const useFinanceStore = create<FinanceStore>()(
             })
             .eq('id', id)
             .select()
-            .single();
-          
-          if (error) throw error;
-          
-          set(state => ({
-            budgets: state.budgets.map(b => b.id === id ? data : b),
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+            .single(),
+          { 
+            successMessage: 'Budget updated successfully',
+            errorContext: 'Failed to update budget' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          budgets: state.budgets.map((b) => (b.id === id ? result.data : b)),
+          loading: false
+        }))
       },
 
       deleteBudget: async (id) => {
-        set({ loading: true, error: null });
-        try {
-          const { error } = await supabase
-            .from('budgets')
-            .delete()
-            .eq('id', id);
-          
-          if (error) throw error;
-          
-          set(state => ({
-            budgets: state.budgets.filter(b => b.id !== id),
-            loading: false
-          }));
-        } catch (error) {
-          set({ error: (error as Error).message, loading: false });
+        set({ loading: true, error: null })
+        
+        const result = await api.mutate(
+          async () => api.client.from('budgets').delete().eq('id', id),
+          { 
+            successMessage: 'Budget deleted successfully',
+            errorContext: 'Failed to delete budget' 
+          }
+        )
+
+        if (isApiError(result)) {
+          set({ loading: false, error: result.error })
+          return
         }
+
+        set((state) => ({
+          budgets: state.budgets.filter((b) => b.id !== id),
+          loading: false
+        }))
       },
 
       // Computed
       getTotalBalance: () => {
-        const accounts = get().accounts;
-        return accounts.reduce((total, account) => 
-          total + (account.balance || 0), 0
-        );
+        const accounts = get().accounts
+        return accounts.reduce((total, account) => total + (account.balance || 0), 0)
       },
 
       getAccountBalance: (accountId: string) => {
-        const account = get().accounts.find(a => a.id === accountId);
-        return account?.balance || 0;
+        const account = get().accounts.find((a) => a.id === accountId)
+        return account?.balance || 0
       },
 
       getCategorySpending: (category: string, period: 'month' | 'year') => {
-        const transactions = get().transactions;
-        const now = new Date();
-        const startDate = new Date(now);
-        
+        const transactions = get().transactions
+        const now = new Date()
+        const startDate = new Date(now)
+
         if (period === 'month') {
-          startDate.setMonth(now.getMonth() - 1);
+          startDate.setMonth(now.getMonth() - 1)
         } else {
-          startDate.setFullYear(now.getFullYear() - 1);
+          startDate.setFullYear(now.getFullYear() - 1)
         }
-        
+
         return transactions
-          .filter(t => 
-            t.type === 'expense' &&
-            t.category === category &&
-            new Date(t.transaction_date) >= startDate
+          .filter(
+            (t) =>
+              t.type === 'expense' &&
+              t.category === category &&
+              new Date(t.transaction_date) >= startDate
           )
-          .reduce((total, t) => total + t.amount, 0);
+          .reduce((total, t) => total + t.amount, 0)
       },
 
       getBudgetUsage: (budgetId: string) => {
-        const budget = get().budgets.find(b => b.id === budgetId);
-        if (!budget) return { spent: 0, percentage: 0 };
-        
+        const budget = get().budgets.find((b) => b.id === budgetId)
+        if (!budget) return { spent: 0, percentage: 0 }
+
         const spent = get().getCategorySpending(
-          budget.category, 
+          budget.category,
           budget.period === 'monthly' ? 'month' : 'year'
-        );
-        
-        const percentage = (spent / budget.amount) * 100;
-        
-        return { spent, percentage };
+        )
+
+        const percentage = (spent / budget.amount) * 100
+
+        return { spent, percentage }
       },
-    }),
-    { name: 'finance-store' }
-  )
-);
+      
+      clearError: () => set({ error: null })
+    }))

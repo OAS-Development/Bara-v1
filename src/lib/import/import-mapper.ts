@@ -1,4 +1,9 @@
-import type { OmniFocusData, OmniFocusTask, OmniFocusProject, OmniFocusContext } from './omnifocus-parser'
+import type {
+  OmniFocusData,
+  OmniFocusTask,
+  OmniFocusProject,
+  OmniFocusContext
+} from './omnifocus-parser'
 import type { Task, Project, Tag, TaskInsert, ProjectInsert, TagInsert } from '@/types'
 
 interface ImportMappingOptions {
@@ -42,19 +47,22 @@ export class ImportMapper {
 
   mapOmniFocusData(data: OmniFocusData): MappedData {
     this.errors = []
-    
+
     // First map contexts to tags (needed for task mapping)
     const tags = this.mapContextsToTags(data.contexts)
-    
+
     // Then map projects (needed for task mapping)
     const projects = this.mapProjects(data.projects)
-    
+
     // Finally map all tasks
     const { tasks, taskTags } = this.mapTasks(data)
 
-    const totalItems = data.projects.length + data.contexts.length + 
-      data.tasks.length + data.projects.reduce((sum, p) => sum + p.tasks.length, 0)
-    
+    const totalItems =
+      data.projects.length +
+      data.contexts.length +
+      data.tasks.length +
+      data.projects.reduce((sum, p) => sum + p.tasks.length, 0)
+
     const mappedItems = projects.length + tags.length + tasks.length
 
     return {
@@ -73,15 +81,15 @@ export class ImportMapper {
 
   private mapContextsToTags(contexts: OmniFocusContext[]): TagInsert[] {
     const tags: TagInsert[] = []
-    
+
     // Sort by hierarchy (parents first)
     const sortedContexts = this.sortByHierarchy(contexts)
-    
+
     for (const context of sortedContexts) {
       try {
         const tagId = this.generateTagId(context.id)
         this.tagIdMap.set(context.id, tagId)
-        
+
         const tag: TagInsert = {
           id: tagId,
           name: context.name,
@@ -102,31 +110,36 @@ export class ImportMapper {
 
   private mapProjects(projects: OmniFocusProject[]): ProjectInsert[] {
     const mappedProjects: ProjectInsert[] = []
-    
+
     // Sort by hierarchy (parents first)
     const sortedProjects = this.sortByHierarchy(projects)
-    
+
     for (const project of sortedProjects) {
       try {
         // Skip completed/dropped projects unless explicitly requested
-        if (!this.options.importCompleted && 
-            (project.status === 'completed' || project.status === 'dropped')) {
+        if (
+          !this.options.importCompleted &&
+          (project.status === 'completed' || project.status === 'dropped')
+        ) {
           continue
         }
 
         const projectId = this.generateProjectId(project.id)
         this.projectIdMap.set(project.id, projectId)
-        
+
         const mappedProject: ProjectInsert = {
           id: projectId,
           name: project.name,
-          note: project.note || null,
-          type: project.type === 'sequential' ? 'sequential' : 
-                project.type === 'single-actions' ? 'single-actions' : 'parallel',
+          description: project.note || null,
+          type:
+            project.type === 'sequential'
+              ? 'sequential'
+              : project.type === 'single-actions'
+                ? 'single-actions'
+                : 'parallel',
           status: this.mapProjectStatus(project.status),
           parent_id: project.parentId ? this.projectIdMap.get(project.parentId) || null : null,
-          position: project.order,
-          review_interval_days: this.inferReviewInterval(project.name),
+          order: project.order,
           user_id: this.options.userId
         }
 
@@ -139,15 +152,18 @@ export class ImportMapper {
     return mappedProjects
   }
 
-  private mapTasks(data: OmniFocusData): { tasks: TaskInsert[]; taskTags: { task_id: string; tag_id: string }[] } {
+  private mapTasks(data: OmniFocusData): {
+    tasks: TaskInsert[]
+    taskTags: { task_id: string; tag_id: string }[]
+  } {
     const tasks: TaskInsert[] = []
     const taskTags: { task_id: string; tag_id: string }[] = []
-    
+
     // Map project tasks
     for (const project of data.projects) {
       // Skip if project wasn't imported
       if (!this.projectIdMap.has(project.id)) continue
-      
+
       for (const task of project.tasks) {
         const result = this.mapTask(task)
         if (result) {
@@ -156,7 +172,7 @@ export class ImportMapper {
         }
       }
     }
-    
+
     // Map standalone tasks
     for (const task of data.tasks) {
       const result = this.mapTask(task)
@@ -169,7 +185,9 @@ export class ImportMapper {
     return { tasks, taskTags }
   }
 
-  private mapTask(task: OmniFocusTask): { task: TaskInsert; taskTags: { task_id: string; tag_id: string }[] } | null {
+  private mapTask(
+    task: OmniFocusTask
+  ): { task: TaskInsert; taskTags: { task_id: string; tag_id: string }[] } | null {
     try {
       // Skip completed tasks unless requested
       if (!this.options.importCompleted && task.completed) {
@@ -177,7 +195,7 @@ export class ImportMapper {
       }
 
       const taskId = this.generateTaskId(task.id)
-      
+
       const mappedTask: TaskInsert = {
         id: taskId,
         title: task.name,
@@ -210,37 +228,37 @@ export class ImportMapper {
   private sortByHierarchy<T extends { id: string; parentId?: string }>(items: T[]): T[] {
     const sorted: T[] = []
     const remaining = new Set(items)
-    
+
     // First add all root items
     for (const item of items) {
-      if (!item.parentId || !items.find(i => i.id === item.parentId)) {
+      if (!item.parentId || !items.find((i) => i.id === item.parentId)) {
         sorted.push(item)
         remaining.delete(item)
       }
     }
-    
+
     // Then add children level by level
     while (remaining.size > 0) {
       const toAdd: T[] = []
-      
-      for (const item of remaining) {
-        if (sorted.some(s => s.id === item.parentId)) {
+
+      for (const item of Array.from(remaining)) {
+        if (sorted.some((s) => s.id === item.parentId)) {
           toAdd.push(item)
         }
       }
-      
+
       if (toAdd.length === 0) {
         // Prevent infinite loop - add remaining items
-        remaining.forEach(item => sorted.push(item))
+        remaining.forEach((item) => sorted.push(item))
         break
       }
-      
-      toAdd.forEach(item => {
+
+      toAdd.forEach((item) => {
         sorted.push(item)
         remaining.delete(item)
       })
     }
-    
+
     return sorted
   }
 
@@ -274,17 +292,17 @@ export class ImportMapper {
   private getTagColor(name: string): string {
     // Map common context names to colors
     const colorMap: Record<string, string> = {
-      'home': '#22c55e',
-      'work': '#3b82f6',
-      'office': '#3b82f6',
-      'errands': '#f59e0b',
-      'phone': '#8b5cf6',
-      'email': '#ef4444',
-      'computer': '#6366f1',
-      'online': '#6366f1',
-      'people': '#ec4899',
-      'waiting': '#f97316',
-      'anywhere': '#10b981'
+      home: '#22c55e',
+      work: '#3b82f6',
+      office: '#3b82f6',
+      errands: '#f59e0b',
+      phone: '#8b5cf6',
+      email: '#ef4444',
+      computer: '#6366f1',
+      online: '#6366f1',
+      people: '#ec4899',
+      waiting: '#f97316',
+      anywhere: '#10b981'
     }
 
     const lowerName = name.toLowerCase()
@@ -302,17 +320,17 @@ export class ImportMapper {
   private getTagIcon(name: string): string {
     // Map common context names to icons
     const iconMap: Record<string, string> = {
-      'home': '🏠',
-      'work': '💼',
-      'office': '🏢',
-      'errands': '🚗',
-      'phone': '📱',
-      'email': '📧',
-      'computer': '💻',
-      'online': '🌐',
-      'people': '👥',
-      'waiting': '⏳',
-      'anywhere': '📍'
+      home: '🏠',
+      work: '💼',
+      office: '🏢',
+      errands: '🚗',
+      phone: '📱',
+      email: '📧',
+      computer: '💻',
+      online: '🌐',
+      people: '👥',
+      waiting: '⏳',
+      anywhere: '📍'
     }
 
     const lowerName = name.toLowerCase()
@@ -328,13 +346,13 @@ export class ImportMapper {
   private inferReviewInterval(projectName: string): number {
     // Infer review intervals from project names
     const lowerName = projectName.toLowerCase()
-    
+
     if (lowerName.includes('daily')) return 1
     if (lowerName.includes('weekly')) return 7
     if (lowerName.includes('monthly')) return 30
     if (lowerName.includes('quarterly')) return 90
     if (lowerName.includes('yearly') || lowerName.includes('annual')) return 365
-    
+
     // Default to weekly reviews
     return 7
   }
@@ -358,7 +376,7 @@ export class ImportMapper {
     // Check for duplicate task names
     const taskNames = new Map<string, number>()
     const duplicateTasks: string[] = []
-    
+
     const countTask = (task: OmniFocusTask) => {
       const count = (taskNames.get(task.name) || 0) + 1
       taskNames.set(task.name, count)
@@ -368,12 +386,11 @@ export class ImportMapper {
     }
 
     data.tasks.forEach(countTask)
-    data.projects.forEach(project => project.tasks.forEach(countTask))
+    data.projects.forEach((project) => project.tasks.forEach(countTask))
 
     // Check for very large imports
-    const totalTasks = data.tasks.length + 
-      data.projects.reduce((sum, p) => sum + p.tasks.length, 0)
-    
+    const totalTasks = data.tasks.length + data.projects.reduce((sum, p) => sum + p.tasks.length, 0)
+
     if (totalTasks > 1000) {
       warnings.push(`Large import detected: ${totalTasks} tasks. This may take a while.`)
     }

@@ -20,7 +20,14 @@ export function ImportProgress({ progress }: ImportProgressProps) {
   }, [])
 
   const getPhaseStatus = (phase: ImportProgress['phase']) => {
-    const phases: ImportProgress['phase'][] = ['preparing', 'tags', 'projects', 'tasks', 'completing', 'done']
+    const phases: ImportProgress['phase'][] = [
+      'preparing',
+      'tags',
+      'projects',
+      'tasks',
+      'completing',
+      'done'
+    ]
     const currentIndex = phases.indexOf(progress.phase)
     const phaseIndex = phases.indexOf(phase)
 
@@ -36,16 +43,16 @@ export function ImportProgress({ progress }: ImportProgressProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const percentage = progress.total > 0 
-    ? Math.round((progress.current / progress.total) * 100)
-    : 0
+  const percentage = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0
 
   return (
     <div className="space-y-6">
       {/* Progress Bar */}
       <div>
         <div className="flex justify-between text-sm text-gray-600 mb-2">
-          <span>Progress: {progress.current} of {progress.total} items</span>
+          <span>
+            Progress: {progress.current} of {progress.total} items
+          </span>
           <span>{percentage}%</span>
         </div>
         <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -88,9 +95,7 @@ export function ImportProgress({ progress }: ImportProgressProps) {
       {/* Current Status */}
       <div className="bg-gray-50 rounded-lg p-4">
         <p className="text-sm text-gray-600">{progress.message}</p>
-        <p className="text-xs text-gray-500 mt-1">
-          Elapsed time: {formatTime(elapsedTime)}
-        </p>
+        <p className="text-xs text-gray-500 mt-1">Elapsed time: {formatTime(elapsedTime)}</p>
       </div>
 
       {/* Errors */}
@@ -108,36 +113,33 @@ export function ImportProgress({ progress }: ImportProgressProps) {
   )
 }
 
-function PhaseIndicator({ 
-  name, 
-  description, 
-  status 
-}: { 
+function PhaseIndicator({
+  name,
+  description,
+  status
+}: {
   name: string
   description: string
-  status: 'pending' | 'active' | 'complete' | 'error' 
+  status: 'pending' | 'active' | 'complete' | 'error'
 }) {
   return (
     <div className="flex items-center gap-3">
-      {status === 'complete' && (
-        <CheckCircle className="h-5 w-5 text-green-600" />
-      )}
-      {status === 'active' && (
-        <Circle className="h-5 w-5 text-blue-600 animate-pulse" />
-      )}
-      {status === 'pending' && (
-        <Circle className="h-5 w-5 text-gray-300" />
-      )}
-      {status === 'error' && (
-        <AlertCircle className="h-5 w-5 text-red-600" />
-      )}
+      {status === 'complete' && <CheckCircle className="h-5 w-5 text-green-600" />}
+      {status === 'active' && <Circle className="h-5 w-5 text-blue-600 animate-pulse" />}
+      {status === 'pending' && <Circle className="h-5 w-5 text-gray-300" />}
+      {status === 'error' && <AlertCircle className="h-5 w-5 text-red-600" />}
       <div className="flex-1">
-        <p className={`text-sm font-medium ${
-          status === 'active' ? 'text-blue-600' : 
-          status === 'complete' ? 'text-green-600' :
-          status === 'error' ? 'text-red-600' :
-          'text-gray-400'
-        }`}>
+        <p
+          className={`text-sm font-medium ${
+            status === 'active'
+              ? 'text-blue-600'
+              : status === 'complete'
+                ? 'text-green-600'
+                : status === 'error'
+                  ? 'text-red-600'
+                  : 'text-gray-400'
+          }`}
+        >
           {name}
         </p>
         <p className="text-xs text-gray-500">{description}</p>

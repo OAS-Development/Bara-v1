@@ -1,14 +1,14 @@
-'use client';
+'use client'
 
-import React, { useMemo } from 'react';
-import { Goal } from '@/stores/goals-store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { Target, TrendingUp, Award, Clock } from 'lucide-react';
+import React, { useMemo } from 'react'
+import { Goal } from '@/stores/goals-store'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { Target, TrendingUp, Award, Clock } from 'lucide-react'
 
 interface GoalProgressProps {
-  goals: Goal[];
+  goals: Goal[]
 }
 
 const categoryColors = {
@@ -17,37 +17,41 @@ const categoryColors = {
   career: '#8b5cf6',
   personal: '#eab308',
   relationships: '#ec4899',
-  learning: '#f97316',
-};
+  learning: '#f97316'
+}
 
 export function GoalProgress({ goals }: GoalProgressProps) {
   const stats = useMemo(() => {
-    const activeGoals = goals.filter(g => g.status === 'active');
-    const completedGoals = goals.filter(g => g.status === 'completed');
-    const pausedGoals = goals.filter(g => g.status === 'paused');
-    
+    const activeGoals = goals.filter((g) => g.status === 'active')
+    const completedGoals = goals.filter((g) => g.status === 'completed')
+    const pausedGoals = goals.filter((g) => g.status === 'paused')
+
     const categoryData = Object.entries(
-      goals.reduce((acc, goal) => {
-        if (goal.category) {
-          acc[goal.category] = (acc[goal.category] || 0) + 1;
-        }
-        return acc;
-      }, {} as Record<string, number>)
-    ).map(([name, value]) => ({ name, value }));
-    
-    const avgProgress = activeGoals.length > 0
-      ? activeGoals.reduce((sum, g) => sum + g.progress, 0) / activeGoals.length
-      : 0;
-    
+      goals.reduce(
+        (acc, goal) => {
+          if (goal.category) {
+            acc[goal.category] = (acc[goal.category] || 0) + 1
+          }
+          return acc
+        },
+        {} as Record<string, number>
+      )
+    ).map(([name, value]) => ({ name, value }))
+
+    const avgProgress =
+      activeGoals.length > 0
+        ? activeGoals.reduce((sum, g) => sum + g.progress, 0) / activeGoals.length
+        : 0
+
     return {
       total: goals.length,
       active: activeGoals.length,
       completed: completedGoals.length,
       paused: pausedGoals.length,
       avgProgress,
-      categoryData,
-    };
-  }, [goals]);
+      categoryData
+    }
+  }, [goals])
 
   if (goals.length === 0) {
     return (
@@ -65,7 +69,7 @@ export function GoalProgress({ goals }: GoalProgressProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -126,9 +130,9 @@ export function GoalProgress({ goals }: GoalProgressProps) {
                     dataKey="value"
                   >
                     {stats.categoryData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={categoryColors[entry.name as keyof typeof categoryColors] || '#666'} 
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={categoryColors[entry.name as keyof typeof categoryColors] || '#666'}
                       />
                     ))}
                   </Pie>
@@ -151,5 +155,5 @@ export function GoalProgress({ goals }: GoalProgressProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

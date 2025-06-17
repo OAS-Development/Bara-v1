@@ -1,4 +1,4 @@
-import { Task } from '@/types'
+import { TaskWithTags } from '@/types'
 import { TimeOfDay } from '@/lib/context/time-rules'
 import { EnergyLevel } from '@/stores/energy-store'
 
@@ -32,21 +32,19 @@ export class PatternAnalyzer {
   private patterns: TaskPattern[] = []
   private readonly MIN_DATA_POINTS = 5
 
-  recordTaskCompletion(task: Task & {
-    completed_at?: string
-    created_at: string
-    tags?: string[]
-    location?: string
-    time_of_day?: TimeOfDay
-    energy_required?: EnergyLevel
-  }, context: {
-    timeOfDay: TimeOfDay
-    energyLevel: EnergyLevel
-    location?: string
-  }) {
-    const completionTime = task.completed_at && task.created_at
-      ? (new Date(task.completed_at).getTime() - new Date(task.created_at).getTime()) / (1000 * 60)
-      : undefined
+  recordTaskCompletion(
+    task: TaskWithTags,
+    context: {
+      timeOfDay: TimeOfDay
+      energyLevel: EnergyLevel
+      location?: string
+    }
+  ) {
+    const completionTime =
+      task.completed_at && task.created_at
+        ? (new Date(task.completed_at).getTime() - new Date(task.created_at).getTime()) /
+          (1000 * 60)
+        : undefined
 
     this.patterns.push({
       type: 'completion',
@@ -71,8 +69,9 @@ export class PatternAnalyzer {
 
     for (const [time, patterns] of Object.entries(timeGroups)) {
       if (patterns.length >= this.MIN_DATA_POINTS) {
-        const completionRate = patterns.filter(p => p.type === 'completion').length / patterns.length
-        
+        const completionRate =
+          patterns.filter((p) => p.type === 'completion').length / patterns.length
+
         if (completionRate > 0.8) {
           insights.push({
             pattern: `High productivity in the ${time}`,
@@ -93,7 +92,7 @@ export class PatternAnalyzer {
 
     for (const [energy, patterns] of Object.entries(energyGroups)) {
       const avgCompletionTime = this.calculateAverageCompletionTime(patterns)
-      
+
       if (patterns.length >= this.MIN_DATA_POINTS && avgCompletionTime) {
         insights.push({
           pattern: `${energy} energy tasks take ~${Math.round(avgCompletionTime)} minutes`,
@@ -105,10 +104,10 @@ export class PatternAnalyzer {
 
     // Analyze energy-time correlations
     const morningHighEnergy = this.patterns.filter(
-      p => p.timeOfDay === 'morning' && p.energyLevel === 'high' && p.type === 'completion'
+      (p) => p.timeOfDay === 'morning' && p.energyLevel === 'high' && p.type === 'completion'
     ).length
 
-    const totalMorning = this.patterns.filter(p => p.timeOfDay === 'morning').length
+    const totalMorning = this.patterns.filter((p) => p.timeOfDay === 'morning').length
 
     if (totalMorning >= this.MIN_DATA_POINTS && morningHighEnergy / totalMorning > 0.6) {
       insights.push({
@@ -129,7 +128,7 @@ export class PatternAnalyzer {
     for (const [projectId, patterns] of Object.entries(projectGroups)) {
       if (!projectId || patterns.length < this.MIN_DATA_POINTS) continue
 
-      const completedPatterns = patterns.filter(p => p.type === 'completion')
+      const completedPatterns = patterns.filter((p) => p.type === 'completion')
       const weeks = this.getWeekSpan(patterns)
       const tasksPerWeek = weeks > 0 ? completedPatterns.length / weeks : 0
 
@@ -138,11 +137,18 @@ export class PatternAnalyzer {
       // Calculate trend
       const recentPatterns = patterns.slice(-10)
       const olderPatterns = patterns.slice(-20, -10)
-      const recentRate = recentPatterns.filter(p => p.type === 'completion').length / recentPatterns.length
-      const olderRate = olderPatterns.filter(p => p.type === 'completion').length / Math.max(olderPatterns.length, 1)
+      const recentRate =
+        recentPatterns.filter((p) => p.type === 'completion').length / recentPatterns.length
+      const olderRate =
+        olderPatterns.filter((p) => p.type === 'completion').length /
+        Math.max(olderPatterns.length, 1)
 
-      const trend = recentRate > olderRate + 0.1 ? 'increasing' :
-                   recentRate < olderRate - 0.1 ? 'decreasing' : 'stable'
+      const trend =
+        recentRate > olderRate + 0.1
+          ? 'increasing'
+          : recentRate < olderRate - 0.1
+            ? 'decreasing'
+            : 'stable'
 
       velocities.push({
         projectId,
@@ -160,7 +166,7 @@ export class PatternAnalyzer {
     const insights: PatternInsight[] = []
     const tagPairs = this.findFrequentTagPairs()
 
-    for (const [pair, count] of tagPairs) {
+    for (const [pair, count] of Array.from(tagPairs)) {
       if (count >= this.MIN_DATA_POINTS) {
         const [tag1, tag2] = pair.split('|')
         insights.push({
@@ -176,24 +182,25 @@ export class PatternAnalyzer {
   }
 
   getSmartNextActions(
-    availableTasks: Task[],
+    availableTasks: TaskWithTags[],
     context: {
       timeOfDay: TimeOfDay
       energyLevel: EnergyLevel
       location?: string
     }
-  ): Task[] {
+  ): TaskWithTags[] {
     // Score tasks based on historical success patterns
-    const scoredTasks = availableTasks.map(task => {
+    const scoredTasks = availableTasks.map((task) => {
       let score = 0
-      
+
       // Check time match
       const timePatterns = this.patterns.filter(
-        p => p.timeOfDay === context.timeOfDay && 
-             p.type === 'completion' &&
-             this.taskMatchesPattern(task, p)
+        (p) =>
+          p.timeOfDay === context.timeOfDay &&
+          p.type === 'completion' &&
+          this.taskMatchesPattern(task, p)
       )
-      
+
       if (timePatterns.length > 0) {
         score += timePatterns.length * 2
       }
@@ -210,8 +217,7 @@ export class PatternAnalyzer {
 
       // Boost for frequently completed tags
       const tagCompletions = this.patterns.filter(
-        p => p.type === 'completion' && 
-             p.tags.some(tag => task.tags?.includes(tag))
+        (p) => p.type === 'completion' && p.tags.some((tag) => task.tags?.includes(tag))
       )
       score += tagCompletions.length
 
@@ -219,9 +225,7 @@ export class PatternAnalyzer {
     })
 
     // Sort by score and return top tasks
-    return scoredTasks
-      .sort((a, b) => b.score - a.score)
-      .map(item => item.task)
+    return scoredTasks.sort((a, b) => b.score - a.score).map((item) => item.task)
   }
 
   private groupByTimeOfDay(): Record<TimeOfDay, TaskPattern[]> {
@@ -272,8 +276,8 @@ export class PatternAnalyzer {
 
   private calculateAverageCompletionTime(patterns: TaskPattern[]): number | null {
     const times = patterns
-      .filter(p => p.completionTime !== undefined)
-      .map(p => p.completionTime!)
+      .filter((p) => p.completionTime !== undefined)
+      .map((p) => p.completionTime!)
 
     if (times.length === 0) return null
 
@@ -303,11 +307,11 @@ export class PatternAnalyzer {
     return pairs
   }
 
-  private taskMatchesPattern(task: Task & { tags?: string[] }, pattern: TaskPattern): boolean {
+  private taskMatchesPattern(task: TaskWithTags, pattern: TaskPattern): boolean {
     if (pattern.projectId && task.project_id !== pattern.projectId) return false
-    
+
     if (pattern.tags.length > 0 && task.tags) {
-      const hasCommonTag = pattern.tags.some(tag => task.tags!.includes(tag))
+      const hasCommonTag = pattern.tags.some((tag) => task.tags!.includes(tag))
       if (!hasCommonTag) return false
     }
 

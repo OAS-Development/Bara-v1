@@ -1,10 +1,10 @@
-import React from 'react';
+import React from 'react'
 
 interface PageHeaderProps {
-  title: string;
-  description?: string;
-  icon?: React.ReactNode;
-  children?: React.ReactNode;
+  title: string
+  description?: string
+  icon?: React.ReactNode
+  children?: React.ReactNode
 }
 
 export function PageHeader({ title, description, icon, children }: PageHeaderProps) {
@@ -15,15 +15,9 @@ export function PageHeader({ title, description, icon, children }: PageHeaderPro
           {icon}
           {title}
         </h1>
-        {description && (
-          <p className="text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="text-muted-foreground">{description}</p>}
       </div>
-      {children && (
-        <div className="flex items-center gap-2">
-          {children}
-        </div>
-      )}
+      {children && <div className="flex items-center gap-2">{children}</div>}
     </div>
-  );
+  )
 }

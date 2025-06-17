@@ -58,7 +58,8 @@ export function ContextLearn() {
       <div className="space-y-4">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-800">
-            The system is learning from your task completion patterns to provide better context-aware suggestions.
+            The system is learning from your task completion patterns to provide better
+            context-aware suggestions.
           </p>
         </div>
 
@@ -106,7 +107,7 @@ export function ContextLearn() {
               <span>You can disable learning or clear data at any time</span>
             </li>
           </ul>
-          
+
           <button
             className="mt-3 text-sm text-red-600 hover:text-red-700"
             onClick={() => {

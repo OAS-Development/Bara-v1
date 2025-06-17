@@ -1,5 +1,10 @@
 import { TaskList } from '@/components/tasks/task-list'
+import { AsyncErrorBoundary } from '@/components/error-boundary'
 
 export default function InboxPage() {
-  return <TaskList />
+  return (
+    <AsyncErrorBoundary>
+      <TaskList />
+    </AsyncErrorBoundary>
+  )
 }

@@ -6,21 +6,10 @@ import { useGeolocation } from '@/hooks/use-geolocation'
 import { MapPin, Plus, Settings, Navigation, AlertCircle } from 'lucide-react'
 
 export function LocationManager() {
-  const {
-    locations,
-    currentLocation,
-    addLocation,
-    updateLocation,
-    deleteLocation,
-    isAtLocation
-  } = useLocationStore()
+  const { locations, currentLocation, addLocation, updateLocation, deleteLocation, isAtLocation } =
+    useLocationStore()
 
-  const {
-    locationError,
-    isWatching,
-    requestLocation,
-    stopWatching
-  } = useGeolocation()
+  const { locationError, isWatching, requestLocation, stopWatching } = useGeolocation()
 
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -112,16 +101,19 @@ export function LocationManager() {
       {/* Current Location Status */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="flex items-start gap-3">
-          <Navigation className={`h-5 w-5 mt-0.5 ${
-            isWatching ? 'text-green-600 animate-pulse' : 'text-gray-400'
-          }`} />
+          <Navigation
+            className={`h-5 w-5 mt-0.5 ${
+              isWatching ? 'text-green-600 animate-pulse' : 'text-gray-400'
+            }`}
+          />
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-700">
               {isWatching ? 'Location Tracking Active' : 'Location Tracking Disabled'}
             </p>
             {currentLocation && (
               <p className="text-xs text-gray-500 mt-1">
-                Current: {formatCoordinates(
+                Current:{' '}
+                {formatCoordinates(
                   currentLocation.coords.latitude,
                   currentLocation.coords.longitude
                 )}
@@ -163,9 +155,7 @@ export function LocationManager() {
                     <p className="text-xs text-gray-500 mt-1">
                       {formatCoordinates(location.latitude, location.longitude)}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      Radius: {location.radius}m
-                    </p>
+                    <p className="text-xs text-gray-500">Radius: {location.radius}m</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -180,7 +170,12 @@ export function LocationManager() {
                     className="p-1 text-red-400 hover:text-red-600"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -198,9 +193,7 @@ export function LocationManager() {
           </h4>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
               <input
                 type="text"
                 value={formData.name || ''}
@@ -211,9 +204,7 @@ export function LocationManager() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Icon
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
                 <input
                   type="text"
                   value={formData.icon || '📍'}

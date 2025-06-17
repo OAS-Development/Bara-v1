@@ -28,7 +28,7 @@ export function EnergyPicker() {
   const [showDialog, setShowDialog] = useState(false)
   const [selectedLevel, setSelectedLevel] = useState<EnergyLevel>(currentLevel)
   const [note, setNote] = useState('')
-  
+
   const trend = getEnergyTrend()
   const config = energyConfig[currentLevel]
 
@@ -64,37 +64,36 @@ export function EnergyPicker() {
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/30" />
           <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
-            <Dialog.Title className="text-lg font-semibold mb-4">
-              Update Energy Level
-            </Dialog.Title>
+            <Dialog.Title className="text-lg font-semibold mb-4">Update Energy Level</Dialog.Title>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                {(Object.entries(energyConfig) as [EnergyLevel, typeof energyConfig[EnergyLevel]][]).map(
-                  ([level, cfg]) => (
-                    <button
-                      key={level}
-                      onClick={() => setSelectedLevel(level)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-colors ${
-                        selectedLevel === level
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className={cfg.color.split(' ')[0]}>
-                        {cfg.icon}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-medium">{cfg.label}</p>
-                        <p className="text-sm text-gray-600">
-                          {level === 'high' && 'Ready for complex tasks'}
-                          {level === 'medium' && 'Good for regular tasks'}
-                          {level === 'low' && 'Best for simple tasks'}
-                        </p>
-                      </div>
-                    </button>
-                  )
-                )}
+                {(
+                  Object.entries(energyConfig) as [
+                    EnergyLevel,
+                    (typeof energyConfig)[EnergyLevel]
+                  ][]
+                ).map(([level, cfg]) => (
+                  <button
+                    key={level}
+                    onClick={() => setSelectedLevel(level)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-colors ${
+                      selectedLevel === level
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className={cfg.color.split(' ')[0]}>{cfg.icon}</div>
+                    <div className="flex-1 text-left">
+                      <p className="font-medium">{cfg.label}</p>
+                      <p className="text-sm text-gray-600">
+                        {level === 'high' && 'Ready for complex tasks'}
+                        {level === 'medium' && 'Good for regular tasks'}
+                        {level === 'low' && 'Best for simple tasks'}
+                      </p>
+                    </div>
+                  </button>
+                ))}
               </div>
 
               <div>

@@ -10,10 +10,10 @@ interface NaturalInputProps {
   className?: string
 }
 
-export function NaturalInput({ 
-  onParsed, 
-  placeholder = "Add a task using natural language...",
-  className = ""
+export function NaturalInput({
+  onParsed,
+  placeholder = 'Add a task using natural language...',
+  className = ''
 }: NaturalInputProps) {
   const [input, setInput] = useState('')
   const [isParsing, setIsParsing] = useState(false)
@@ -26,6 +26,7 @@ export function NaturalInput({
   useEffect(() => {
     // Load sample suggestions
     setSuggestions(parser.getSampleInputs())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleParse = async () => {
@@ -74,7 +75,7 @@ export function NaturalInput({
           className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           disabled={isParsing}
         />
-        
+
         <button
           onClick={handleParse}
           disabled={!input.trim() || isParsing}

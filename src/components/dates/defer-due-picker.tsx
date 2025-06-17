@@ -10,11 +10,11 @@ interface DeferDuePickerProps {
   onDueChange: (date: Date | null) => void
 }
 
-export function DeferDuePicker({ 
-  deferDate, 
-  dueDate, 
-  onDeferChange, 
-  onDueChange 
+export function DeferDuePicker({
+  deferDate,
+  dueDate,
+  onDeferChange,
+  onDueChange
 }: DeferDuePickerProps) {
   return (
     <div className="space-y-3">
@@ -29,9 +29,7 @@ export function DeferDuePicker({
           placeholder="Task available immediately"
           className="w-full"
         />
-        <p className="text-xs text-gray-500 mt-1">
-          Task will be hidden until this date
-        </p>
+        <p className="text-xs text-gray-500 mt-1">Task will be hidden until this date</p>
       </div>
 
       <div>
@@ -45,9 +43,7 @@ export function DeferDuePicker({
           placeholder="No due date"
           className="w-full"
         />
-        <p className="text-xs text-gray-500 mt-1">
-          Task should be completed by this date
-        </p>
+        <p className="text-xs text-gray-500 mt-1">Task should be completed by this date</p>
       </div>
 
       {deferDate && dueDate && deferDate > dueDate && (

@@ -51,7 +51,10 @@ export function RepeatPicker({ interval, unit, onChange }: RepeatPickerProps) {
           onChange={handleToggle}
           className="rounded border-gray-300"
         />
-        <label htmlFor="repeat-enabled" className="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <label
+          htmlFor="repeat-enabled"
+          className="flex items-center gap-2 text-sm font-medium text-gray-700"
+        >
           <RotateCw className="h-4 w-4" />
           Repeat
         </label>

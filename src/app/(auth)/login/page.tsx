@@ -19,13 +19,13 @@ export default function LoginPage() {
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password,
+      password
     })
 
     if (error) {
       setError(error.message)
       setLoading(false)
-      
+
       // Track failed login attempt
       try {
         await fetch('/api/auth/track-failed-login', {
@@ -46,12 +46,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Private System
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Authorized Access Only
-          </p>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Private System</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">Authorized Access Only</p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           {error && (

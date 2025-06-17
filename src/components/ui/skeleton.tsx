@@ -5,11 +5,7 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'text' | 'heading' | 'button' | 'avatar' | 'custom'
 }
 
-export function Skeleton({
-  className,
-  variant = 'custom',
-  ...props
-}: SkeletonProps) {
+export function Skeleton({ className, variant = 'custom', ...props }: SkeletonProps) {
   return (
     <div
       className={cn(

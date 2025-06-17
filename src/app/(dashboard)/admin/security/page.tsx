@@ -101,7 +101,7 @@ export default function SecurityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {events.filter(e => e.type === 'FAILED_LOGIN').length}
+              {events.filter((e) => e.type === 'FAILED_LOGIN').length}
             </div>
           </CardContent>
         </Card>
@@ -113,7 +113,7 @@ export default function SecurityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {events.filter(e => e.type === 'UNAUTHORIZED_ACCESS').length}
+              {events.filter((e) => e.type === 'UNAUTHORIZED_ACCESS').length}
             </div>
           </CardContent>
         </Card>
@@ -142,27 +142,16 @@ export default function SecurityDashboard() {
           ) : (
             <div className="space-y-2">
               {events.map((event, index) => (
-                <div
-                  key={index}
-                  className={`p-3 rounded-lg border ${getEventColor(event.type)}`}
-                >
+                <div key={index} className={`p-3 rounded-lg border ${getEventColor(event.type)}`}>
                   <div className="flex items-start gap-3">
                     {getEventIcon(event.type)}
                     <div className="flex-1">
                       <div className="font-medium">{event.type.replace(/_/g, ' ')}</div>
                       <div className="text-sm text-gray-600 space-y-1">
-                        {event.attemptedEmail && (
-                          <div>Email: {event.attemptedEmail}</div>
-                        )}
-                        {event.path && (
-                          <div>Path: {event.path}</div>
-                        )}
-                        {event.ip && (
-                          <div>IP: {event.ip}</div>
-                        )}
-                        <div>
-                          {format(new Date(event.timestamp), 'MMM d, yyyy HH:mm:ss')}
-                        </div>
+                        {event.attemptedEmail && <div>Email: {event.attemptedEmail}</div>}
+                        {event.path && <div>Path: {event.path}</div>}
+                        {event.ip && <div>IP: {event.ip}</div>}
+                        <div>{format(new Date(event.timestamp), 'MMM d, yyyy HH:mm:ss')}</div>
                       </div>
                     </div>
                   </div>

@@ -13,19 +13,19 @@ interface KeyboardShortcut {
 export function useKeyboard(shortcuts: KeyboardShortcut[]) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      shortcuts.forEach(shortcut => {
+      shortcuts.forEach((shortcut) => {
         const metaMatch = shortcut.meta ? event.metaKey || event.ctrlKey : true
         const ctrlMatch = shortcut.ctrl ? event.ctrlKey : true
         const shiftMatch = shortcut.shift ? event.shiftKey : true
         const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase()
-        
+
         if (metaMatch && ctrlMatch && shiftMatch && keyMatch) {
           event.preventDefault()
           shortcut.handler(event)
         }
       })
     }
-    
+
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [shortcuts])

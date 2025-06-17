@@ -46,7 +46,7 @@ export default function ImportPage() {
             {step === 'upload' && (
               <div className="space-y-6">
                 <FileUpload onFileSelect={handleFileSelect} />
-                
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                   <div className="flex gap-3">
                     <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -72,7 +72,6 @@ export default function ImportPage() {
                 onCancel={handleCancel}
               />
             )}
-
           </div>
         </div>
       </div>

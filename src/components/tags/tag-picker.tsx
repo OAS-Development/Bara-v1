@@ -21,7 +21,7 @@ export function TagPicker({ selectedTagIds, onTagsChange, onClose }: TagPickerPr
     fetchTags()
   }, [fetchTags])
 
-  const filteredTags = tags.filter(tag =>
+  const filteredTags = tags.filter((tag) =>
     tag.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -45,10 +45,7 @@ export function TagPicker({ selectedTagIds, onTagsChange, onClose }: TagPickerPr
       <div className="bg-white rounded-lg w-full max-w-md">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Select Tags</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -66,29 +63,20 @@ export function TagPicker({ selectedTagIds, onTagsChange, onClose }: TagPickerPr
 
         <div className="max-h-64 overflow-y-auto px-4">
           {filteredTags.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">
-              No tags found
-            </p>
+            <p className="text-sm text-gray-500 text-center py-4">No tags found</p>
           ) : (
             <div className="space-y-1">
-              {filteredTags.map(tag => (
+              {filteredTags.map((tag) => (
                 <button
                   key={tag.id}
                   onClick={() => toggleTag(tag.id)}
                   className={cn(
-                    "w-full flex items-center justify-between p-2 rounded hover:bg-gray-50",
-                    selectedIds.has(tag.id) && "bg-blue-50"
+                    'w-full flex items-center justify-between p-2 rounded hover:bg-gray-50',
+                    selectedIds.has(tag.id) && 'bg-blue-50'
                   )}
                 >
-                  <TagChip
-                    name={tag.name}
-                    color={tag.color}
-                    icon={tag.icon}
-                    size="md"
-                  />
-                  {selectedIds.has(tag.id) && (
-                    <Check className="h-4 w-4 text-blue-600" />
-                  )}
+                  <TagChip name={tag.name} color={tag.color} icon={tag.icon} size="md" />
+                  {selectedIds.has(tag.id) && <Check className="h-4 w-4 text-blue-600" />}
                 </button>
               ))}
             </div>

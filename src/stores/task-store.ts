@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { createClient } from '@/lib/supabase/client'
+import { api, isApiError, type ApiError } from '@/lib/api/client'
 import type { Database } from '@/types/database.types'
 
 type Task = Database['public']['Tables']['tasks']['Row']
@@ -17,7 +17,8 @@ interface TaskStore {
   tasks: TaskWithTags[]
   isLoading: boolean
   selectedTaskId: string | null
-  
+  error: ApiError | null
+
   // Actions
   fetchTasks: () => Promise<void>
   createTask: (task: TaskCreateData) => Promise<void>
@@ -26,139 +27,179 @@ interface TaskStore {
   deleteTask: (id: string) => Promise<void>
   toggleTask: (id: string) => Promise<void>
   selectTask: (id: string | null) => void
+  clearError: () => void
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
   isLoading: false,
   selectedTaskId: null,
+  error: null,
 
   fetchTasks: async () => {
-    set({ isLoading: true })
-    const supabase = createClient()
-    
+    set({ isLoading: true, error: null })
+
     // Get current date for filtering deferred tasks
     const now = new Date().toISOString()
-    
-    const { data: tasks, error: tasksError } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('status', 'active')
-      .or(`defer_date.is.null,defer_date.lte.${now}`)
-      .order('position')
-    
-    if (tasksError) {
-      console.error('Error fetching tasks:', tasksError)
-      set({ isLoading: false })
+
+    const tasksResult = await api.query(
+      () => api.client
+        .from('tasks')
+        .select('*')
+        .eq('status', 'active')
+        .or(`defer_date.is.null,defer_date.lte.${now}`)
+        .order('position'),
+      { errorContext: 'Failed to fetch tasks' }
+    )
+
+    if (isApiError(tasksResult)) {
+      set({ isLoading: false, error: tasksResult.error })
       return
     }
 
-    // Fetch tags for all tasks
-    const { data: taskTags, error: tagsError } = await supabase
-      .from('task_tags')
-      .select('task_id, tag_id')
-      .in('task_id', tasks?.map(t => t.id) || [])
+    const tasks = tasksResult.data
 
-    if (!tagsError && tasks) {
-      // Group tags by task
-      const tagsByTask = taskTags?.reduce((acc, tt) => {
+    // Fetch tags for all tasks
+    const tagsResult = await api.query(
+      () => api.client
+        .from('task_tags')
+        .select('task_id, tag_id')
+        .in('task_id', tasks.map((t) => t.id)),
+      { errorContext: 'Failed to fetch task tags' }
+    )
+
+    if (isApiError(tagsResult)) {
+      set({ isLoading: false, error: tagsResult.error })
+      return
+    }
+
+    // Group tags by task
+    const tagsByTask = tagsResult.data.reduce(
+      (acc, tt) => {
         if (!acc[tt.task_id]) acc[tt.task_id] = []
         acc[tt.task_id].push(tt.tag_id)
         return acc
-      }, {} as Record<string, string[]>) || {}
+      },
+      {} as Record<string, string[]>
+    )
 
-      // Merge tags into tasks
-      const tasksWithTags = tasks.map(task => ({
-        ...task,
-        tags: tagsByTask[task.id] || []
-      }))
+    // Merge tags into tasks
+    const tasksWithTags = tasks.map((task) => ({
+      ...task,
+      tags: tagsByTask[task.id] || []
+    }))
 
-      set({ tasks: tasksWithTags, isLoading: false })
-    } else {
-      console.error('Error fetching task tags:', tagsError)
-      set({ isLoading: false })
-    }
+    set({ tasks: tasksWithTags, isLoading: false, error: null })
   },
 
   createTask: async (taskData) => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    set({ error: null })
     
-    if (!user) return
-    
-    const { tagIds, ...taskInsertData } = taskData
-    
-    const { data: task, error: taskError } = await supabase
-      .from('tasks')
-      .insert({
-        ...taskInsertData,
-        user_id: user.id,
-        title: taskInsertData.title || 'New Task',
-      })
-      .select()
-      .single()
-    
-    if (taskError || !task) {
-      console.error('Error creating task:', taskError)
+    const userResult = await api.query(
+      () => api.client.auth.getUser(),
+      { showToast: false }
+    )
+
+    if (isApiError(userResult) || !userResult.data.user) {
+      set({ error: { message: 'No authenticated user' } })
       return
     }
 
+    const { tagIds, ...taskInsertData } = taskData
+
+    const taskResult = await api.mutate(
+      () => api.client
+        .from('tasks')
+        .insert({
+          ...taskInsertData,
+          user_id: userResult.data.user.id,
+          title: taskInsertData.title || 'New Task'
+        })
+        .select()
+        .single(),
+      { 
+        successMessage: 'Task created successfully',
+        errorContext: 'Failed to create task' 
+      }
+    )
+
+    if (isApiError(taskResult)) {
+      set({ error: taskResult.error })
+      return
+    }
+
+    const task = taskResult.data
+
     // Add tags if provided
     if (tagIds && tagIds.length > 0) {
-      const tagInserts = tagIds.map(tagId => ({
+      const tagInserts = tagIds.map((tagId) => ({
         task_id: task.id,
         tag_id: tagId
       }))
 
-      const { error: tagsError } = await supabase
-        .from('task_tags')
-        .insert(tagInserts)
+      const tagsResult = await api.mutate(
+        () => api.client.from('task_tags').insert(tagInserts),
+        { 
+          showToast: false,
+          errorContext: 'Failed to add tags' 
+        }
+      )
 
-      if (tagsError) {
-        console.error('Error adding tags:', tagsError)
+      if (isApiError(tagsResult)) {
+        set({ error: tagsResult.error })
       }
     }
 
     const taskWithTags = { ...task, tags: tagIds || [] }
-    set(state => ({ tasks: [...state.tasks, taskWithTags] }))
+    set((state) => ({ tasks: [...state.tasks, taskWithTags] }))
   },
 
   updateTask: async (id, updates) => {
-    const supabase = createClient()
+    set({ error: null })
     
-    const { error } = await supabase
-      .from('tasks')
-      .update(updates)
-      .eq('id', id)
-    
-    if (!error) {
-      set(state => ({
-        tasks: state.tasks.map(task => 
-          task.id === id ? { ...task, ...updates } : task
-        )
-      }))
+    const result = await api.mutate(
+      () => api.client.from('tasks').update(updates).eq('id', id),
+      { 
+        successMessage: 'Task updated successfully',
+        errorContext: 'Failed to update task' 
+      }
+    )
+
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return
     }
+
+    set((state) => ({
+      tasks: state.tasks.map((task) => (task.id === id ? { ...task, ...updates } : task))
+    }))
   },
 
   deleteTask: async (id) => {
-    const supabase = createClient()
+    set({ error: null })
     
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', id)
-    
-    if (!error) {
-      set(state => ({
-        tasks: state.tasks.filter(task => task.id !== id)
-      }))
+    const result = await api.mutate(
+      () => api.client.from('tasks').delete().eq('id', id),
+      { 
+        successMessage: 'Task deleted successfully',
+        errorContext: 'Failed to delete task' 
+      }
+    )
+
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return
     }
+
+    set((state) => ({
+      tasks: state.tasks.filter((task) => task.id !== id)
+    }))
   },
 
   toggleTask: async (id) => {
-    const task = get().tasks.find(t => t.id === id)
+    const task = get().tasks.find((t) => t.id === id)
     if (!task) return
-    
+
     await get().updateTask(id, {
       status: task.status === 'active' ? 'completed' : 'active',
       completed_at: task.status === 'active' ? new Date().toISOString() : null
@@ -166,43 +207,50 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   updateTaskTags: async (id, tagIds) => {
-    const supabase = createClient()
+    set({ error: null })
     
     // First delete existing tags
-    const { error: deleteError } = await supabase
-      .from('task_tags')
-      .delete()
-      .eq('task_id', id)
-    
-    if (deleteError) {
-      console.error('Error deleting existing tags:', deleteError)
+    const deleteResult = await api.mutate(
+      () => api.client.from('task_tags').delete().eq('task_id', id),
+      { 
+        showToast: false,
+        errorContext: 'Failed to delete existing tags' 
+      }
+    )
+
+    if (isApiError(deleteResult)) {
+      set({ error: deleteResult.error })
       return
     }
 
     // Then add new tags
     if (tagIds.length > 0) {
-      const tagInserts = tagIds.map(tagId => ({
+      const tagInserts = tagIds.map((tagId) => ({
         task_id: id,
         tag_id: tagId
       }))
 
-      const { error: insertError } = await supabase
-        .from('task_tags')
-        .insert(tagInserts)
+      const insertResult = await api.mutate(
+        () => api.client.from('task_tags').insert(tagInserts),
+        { 
+          successMessage: 'Tags updated successfully',
+          errorContext: 'Failed to add tags' 
+        }
+      )
 
-      if (insertError) {
-        console.error('Error adding tags:', insertError)
+      if (isApiError(insertResult)) {
+        set({ error: insertResult.error })
         return
       }
     }
 
     // Update local state
-    set(state => ({
-      tasks: state.tasks.map(task => 
-        task.id === id ? { ...task, tags: tagIds } : task
-      )
+    set((state) => ({
+      tasks: state.tasks.map((task) => (task.id === id ? { ...task, tags: tagIds } : task))
     }))
   },
 
-  selectTask: (id) => set({ selectedTaskId: id })
+  selectTask: (id) => set({ selectedTaskId: id }),
+
+  clearError: () => set({ error: null })
 }))

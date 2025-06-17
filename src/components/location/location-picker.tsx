@@ -18,7 +18,7 @@ export function LocationPicker({
   const { locations, isAtLocation } = useLocationStore()
   const [isOpen, setIsOpen] = useState(false)
 
-  const selectedLocation = locations.find(loc => loc.id === selectedLocationId)
+  const selectedLocation = locations.find((loc) => loc.id === selectedLocationId)
 
   const handleSelect = (locationId: string | null) => {
     onSelect(locationId)
@@ -57,10 +57,7 @@ export function LocationPicker({
 
       {isOpen && (
         <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
           <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
             {showNone && (
               <button
@@ -76,7 +73,7 @@ export function LocationPicker({
                 {!selectedLocationId && <Check className="h-4 w-4 text-blue-600" />}
               </button>
             )}
-            
+
             {locations.map((location) => {
               const atLocation = isAtLocation(location.id)
               return (
@@ -91,9 +88,7 @@ export function LocationPicker({
                     <span className="text-lg">{location.icon || '📍'}</span>
                     <div className="text-left">
                       <p className="text-sm font-medium">{location.name}</p>
-                      {atLocation && (
-                        <p className="text-xs text-green-600">You are here</p>
-                      )}
+                      {atLocation && <p className="text-xs text-green-600">You are here</p>}
                     </div>
                   </div>
                   {selectedLocationId === location.id && (

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { createClient } from '@/lib/supabase/client'
+import { api, isApiError, type ApiError } from '@/lib/api/client'
 import { Database } from '@/types/database.types'
 
 type Project = Database['public']['Tables']['projects']['Row']
@@ -15,17 +15,16 @@ interface ProjectState {
   projects: Project[]
   projectsTree: ProjectWithChildren[]
   loading: boolean
-  error: string | null
-  
+  error: ApiError | null
+
   fetchProjects: () => Promise<void>
   createProject: (project: ProjectInsert) => Promise<Project | null>
   updateProject: (id: string, update: ProjectUpdate) => Promise<void>
   deleteProject: (id: string) => Promise<void>
   getProjectById: (id: string) => Project | undefined
   buildProjectTree: (projects: Project[]) => ProjectWithChildren[]
+  clearError: () => void
 }
-
-const supabase = createClient()
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
   projects: [],
@@ -34,91 +33,120 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   error: null,
 
   fetchProjects: async () => {
-    set({ loading: true })
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('No authenticated user')
+    set({ loading: true, error: null })
+    
+    const userResult = await api.query(
+      () => api.client.auth.getUser(),
+      { showToast: false }
+    )
 
-      const { data, error } = await supabase
+    if (isApiError(userResult) || !userResult.data.user) {
+      set({ loading: false, error: { message: 'No authenticated user' } })
+      return
+    }
+
+    const result = await api.query(
+      () => api.client
         .from('projects')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userResult.data.user.id)
         .order('position', { ascending: true })
-        .order('name', { ascending: true })
+        .order('name', { ascending: true }),
+      { errorContext: 'Failed to fetch projects' }
+    )
 
-      if (error) throw error
-
-      const projects = data || []
-      const projectsTree = get().buildProjectTree(projects)
-      
-      set({ projects, projectsTree, loading: false, error: null })
-    } catch (error) {
-      set({ loading: false, error: error instanceof Error ? error.message : 'Failed to fetch projects' })
+    if (isApiError(result)) {
+      set({ loading: false, error: result.error })
+      return
     }
+
+    const projects = result.data
+    const projectsTree = get().buildProjectTree(projects)
+
+    set({ projects, projectsTree, loading: false, error: null })
   },
 
   createProject: async (project) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('No authenticated user')
+    set({ error: null })
+    
+    const userResult = await api.query(
+      () => api.client.auth.getUser(),
+      { showToast: false }
+    )
 
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({ ...project, user_id: user.id })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      const projects = [...get().projects, data]
-      const projectsTree = get().buildProjectTree(projects)
-      set({ projects, projectsTree })
-      
-      return data
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to create project' })
+    if (isApiError(userResult) || !userResult.data.user) {
+      set({ error: { message: 'No authenticated user' } })
       return null
     }
+
+    const result = await api.mutate(
+      () => api.client
+        .from('projects')
+        .insert({ ...project, user_id: userResult.data.user.id })
+        .select()
+        .single(),
+      { 
+        successMessage: 'Project created successfully',
+        errorContext: 'Failed to create project' 
+      }
+    )
+
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return null
+    }
+
+    const projects = [...get().projects, result.data]
+    const projectsTree = get().buildProjectTree(projects)
+    set({ projects, projectsTree })
+
+    return result.data
   },
 
   updateProject: async (id, update) => {
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .update(update)
-        .eq('id', id)
+    set({ error: null })
+    
+    const result = await api.mutate(
+      () => api.client.from('projects').update(update).eq('id', id),
+      { 
+        successMessage: 'Project updated successfully',
+        errorContext: 'Failed to update project' 
+      }
+    )
 
-      if (error) throw error
-
-      const projects = get().projects.map(p => 
-        p.id === id ? { ...p, ...update } : p
-      )
-      const projectsTree = get().buildProjectTree(projects)
-      set({ projects, projectsTree })
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to update project' })
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return
     }
+
+    const projects = get().projects.map((p) => (p.id === id ? { ...p, ...update } : p))
+    const projectsTree = get().buildProjectTree(projects)
+    set({ projects, projectsTree })
   },
 
   deleteProject: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', id)
+    set({ error: null })
+    
+    const result = await api.mutate(
+      () => api.client.from('projects').delete().eq('id', id),
+      { 
+        successMessage: 'Project deleted successfully',
+        errorContext: 'Failed to delete project' 
+      }
+    )
 
-      if (error) throw error
-
-      const projects = get().projects.filter(p => p.id !== id)
-      const projectsTree = get().buildProjectTree(projects)
-      set({ projects, projectsTree })
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to delete project' })
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return
     }
+
+    const projects = get().projects.filter((p) => p.id !== id)
+    const projectsTree = get().buildProjectTree(projects)
+    set({ projects, projectsTree })
   },
 
   getProjectById: (id) => {
-    return get().projects.find(p => p.id === id)
+    return get().projects.find((p) => p.id === id)
   },
 
   buildProjectTree: (projects) => {
@@ -126,12 +154,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     const rootProjects: ProjectWithChildren[] = []
 
     // First pass: create all projects
-    projects.forEach(project => {
+    projects.forEach((project) => {
       projectMap.set(project.id, { ...project, children: [] })
     })
 
     // Second pass: build hierarchy
-    projects.forEach(project => {
+    projects.forEach((project) => {
       const projectWithChildren = projectMap.get(project.id)!
       if (project.parent_id) {
         const parent = projectMap.get(project.parent_id)
@@ -150,7 +178,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         if (sortDiff !== 0) return sortDiff
         return (a.name ?? '').localeCompare(b.name ?? '')
       })
-      projects.forEach(p => {
+      projects.forEach((p) => {
         if (p.children && p.children.length > 0) {
           sortProjects(p.children)
         }
@@ -159,5 +187,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     sortProjects(rootProjects)
     return rootProjects
-  }
+  },
+
+  clearError: () => set({ error: null })
 }))

@@ -55,7 +55,7 @@ export class ClaudeClient {
       }
 
       const data = await response.json()
-      
+
       return {
         content: data.content[0].text,
         usage: data.usage
@@ -90,7 +90,8 @@ export class ClaudeClient {
       content: JSON.stringify({
         title: input,
         tags: this.detectTags(lowerInput),
-        priority: lowerInput.includes('urgent') || lowerInput.includes('important') ? 'high' : 'normal'
+        priority:
+          lowerInput.includes('urgent') || lowerInput.includes('important') ? 'high' : 'normal'
       })
     }
   }

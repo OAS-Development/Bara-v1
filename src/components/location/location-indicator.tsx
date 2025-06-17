@@ -8,7 +8,7 @@ export function LocationIndicator() {
   const { locations, isAtLocation } = useLocationStore()
   const { currentLocation, locationError, isWatching, requestLocation } = useGeolocation()
 
-  const currentLocations = locations.filter(loc => isAtLocation(loc.id))
+  const currentLocations = locations.filter((loc) => isAtLocation(loc.id))
 
   if (!isWatching && !locationError) {
     return (

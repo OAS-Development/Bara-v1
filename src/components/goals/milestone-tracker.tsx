@@ -1,34 +1,34 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { GoalMilestone, useGoalsStore } from '@/stores/goals-store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Flag, Plus, GripVertical, Calendar, Check } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import React, { useState } from 'react'
+import { GoalMilestone, useGoalsStore } from '@/stores/goals-store'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Flag, Plus, GripVertical, Calendar, Check } from 'lucide-react'
+import { format } from 'date-fns'
+import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface MilestoneTrackerProps {
-  goalId: string;
-  milestones: GoalMilestone[];
-  onReorder?: (milestoneIds: string[]) => void;
+  goalId: string
+  milestones: GoalMilestone[]
+  onReorder?: (milestoneIds: string[]) => void
 }
 
 export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTrackerProps) {
-  const { addMilestone, toggleMilestone, deleteMilestone, loading } = useGoalsStore();
-  const [isAdding, setIsAdding] = useState(false);
-  const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const { addMilestone, toggleMilestone, deleteMilestone, loading } = useGoalsStore()
+  const [isAdding, setIsAdding] = useState(false)
+  const [newMilestoneTitle, setNewMilestoneTitle] = useState('')
+  const [draggedItem, setDraggedItem] = useState<string | null>(null)
 
   const handleAddMilestone = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+    e.preventDefault()
+
     if (!newMilestoneTitle.trim()) {
-      toast.error('Please enter a milestone title');
-      return;
+      toast.error('Please enter a milestone title')
+      return
     }
 
     try {
@@ -36,45 +36,45 @@ export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTra
         goal_id: goalId,
         title: newMilestoneTitle.trim(),
         completed: false,
-        order_index: milestones.length,
-      });
-      
-      setNewMilestoneTitle('');
-      setIsAdding(false);
-      toast.success('Milestone added');
+        order_index: milestones.length
+      })
+
+      setNewMilestoneTitle('')
+      setIsAdding(false)
+      toast.success('Milestone added')
     } catch (error) {
-      toast.error('Failed to add milestone');
+      toast.error('Failed to add milestone')
     }
-  };
+  }
 
   const handleDragStart = (e: React.DragEvent, milestoneId: string) => {
-    setDraggedItem(milestoneId);
-    e.dataTransfer.effectAllowed = 'move';
-  };
+    setDraggedItem(milestoneId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
 
   const handleDrop = (e: React.DragEvent, targetId: string) => {
-    e.preventDefault();
-    
-    if (!draggedItem || draggedItem === targetId) return;
-    
-    const newOrder = [...milestones];
-    const draggedIndex = newOrder.findIndex(m => m.id === draggedItem);
-    const targetIndex = newOrder.findIndex(m => m.id === targetId);
-    
-    const [removed] = newOrder.splice(draggedIndex, 1);
-    newOrder.splice(targetIndex, 0, removed);
-    
-    onReorder?.(newOrder.map(m => m.id));
-    setDraggedItem(null);
-  };
+    e.preventDefault()
 
-  const completedCount = milestones.filter(m => m.completed).length;
-  const progress = milestones.length > 0 ? (completedCount / milestones.length) * 100 : 0;
+    if (!draggedItem || draggedItem === targetId) return
+
+    const newOrder = [...milestones]
+    const draggedIndex = newOrder.findIndex((m) => m.id === draggedItem)
+    const targetIndex = newOrder.findIndex((m) => m.id === targetId)
+
+    const [removed] = newOrder.splice(draggedIndex, 1)
+    newOrder.splice(targetIndex, 0, removed)
+
+    onReorder?.(newOrder.map((m) => m.id))
+    setDraggedItem(null)
+  }
+
+  const completedCount = milestones.filter((m) => m.completed).length
+  const progress = milestones.length > 0 ? (completedCount / milestones.length) * 100 : 0
 
   return (
     <Card>
@@ -88,11 +88,7 @@ export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTra
             </span>
           </div>
           {!isAdding && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAdding(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setIsAdding(true)}>
               <Plus className="w-4 h-4 mr-1" />
               Add
             </Button>
@@ -109,24 +105,26 @@ export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTra
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, milestone.id)}
               className={cn(
-                "flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent transition-colors cursor-move",
-                draggedItem === milestone.id && "opacity-50",
-                milestone.completed && "opacity-75"
+                'flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent transition-colors cursor-move',
+                draggedItem === milestone.id && 'opacity-50',
+                milestone.completed && 'opacity-75'
               )}
             >
               <GripVertical className="w-4 h-4 text-muted-foreground" />
-              
+
               <Checkbox
                 checked={milestone.completed}
                 onCheckedChange={() => toggleMilestone(milestone.id)}
                 disabled={loading}
               />
-              
+
               <div className="flex-1">
-                <p className={cn(
-                  "text-sm font-medium",
-                  milestone.completed && "line-through text-muted-foreground"
-                )}>
+                <p
+                  className={cn(
+                    'text-sm font-medium',
+                    milestone.completed && 'line-through text-muted-foreground'
+                  )}
+                >
                   {milestone.title}
                 </p>
                 <div className="flex items-center gap-3 mt-1">
@@ -144,7 +142,7 @@ export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTra
                   )}
                 </div>
               </div>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -155,7 +153,7 @@ export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTra
               </Button>
             </div>
           ))}
-          
+
           {isAdding && (
             <form onSubmit={handleAddMilestone} className="flex gap-2">
               <Input
@@ -164,14 +162,16 @@ export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTra
                 placeholder="New milestone..."
                 autoFocus
               />
-              <Button type="submit" size="sm">Add</Button>
+              <Button type="submit" size="sm">
+                Add
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  setIsAdding(false);
-                  setNewMilestoneTitle('');
+                  setIsAdding(false)
+                  setNewMilestoneTitle('')
                 }}
               >
                 Cancel
@@ -179,7 +179,7 @@ export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTra
             </form>
           )}
         </div>
-        
+
         {milestones.length > 0 && (
           <div className="mt-4 pt-4 border-t">
             <div className="text-sm text-muted-foreground mb-2">
@@ -195,5 +195,5 @@ export function MilestoneTracker({ goalId, milestones, onReorder }: MilestoneTra
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

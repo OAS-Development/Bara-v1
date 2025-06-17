@@ -1,7 +1,19 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, Folder, Tag, Calendar, Clock, MapPin, Battery, Sunrise, Sun, Sunset, Moon } from 'lucide-react'
+import {
+  X,
+  Folder,
+  Tag,
+  Calendar,
+  Clock,
+  MapPin,
+  Battery,
+  Sunrise,
+  Sun,
+  Sunset,
+  Moon
+} from 'lucide-react'
 import { useTaskStore } from '@/stores/task-store'
 import { useProjectStore } from '@/stores/project-store'
 import { useTagStore } from '@/stores/tag-store'
@@ -11,6 +23,8 @@ import { TimeOfDay } from '@/lib/context/time-rules'
 import { ProjectPicker } from '@/components/projects/project-picker'
 import { TagPicker } from '@/components/tags/tag-picker'
 import { TagChip } from '@/components/tags/tag-chip'
+import { taskSchema, safeValidate } from '@/lib/validation'
+import { toast } from '@/components/ui/toast'
 import { DatePicker } from '@/components/dates/date-picker'
 import { LocationPicker } from '@/components/location/location-picker'
 import * as Select from '@radix-ui/react-select'
@@ -62,16 +76,32 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
     
-    await createTask({ 
-      title: title.trim(), 
-      note: note.trim(),
-      project_id: projectId,
+    const taskData = {
+      title: title.trim(),
+      note: note.trim() || undefined,
+      project_id: projectId || undefined,
+      defer_date: deferDate?.toISOString() || undefined,
+      due_date: dueDate?.toISOString() || undefined,
+      location: locationId || undefined,
+      energy_level: energyRequired || undefined,
+      tags: tagIds.length > 0 ? tagIds : undefined
+    }
+
+    const validation = safeValidate(taskSchema, taskData)
+    if (!validation.success) {
+      const firstError = validation.error.errors[0]
+      toast({
+        title: 'Validation Error',
+        description: firstError.message,
+        variant: 'destructive'
+      })
+      return
+    }
+
+    await createTask({
+      ...validation.data,
       tagIds,
-      defer_date: deferDate?.toISOString() || null,
-      due_date: dueDate?.toISOString() || null,
-      location: locationId,
       time_of_day: timeOfDay,
       energy_required: energyRequired
     })
@@ -88,22 +118,15 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div 
-        className="bg-gray-900 rounded-lg w-full max-w-lg mx-4"
-        onKeyDown={handleKeyDown}
-      >
+      <div className="bg-gray-900 rounded-lg w-full max-w-lg mx-4" onKeyDown={handleKeyDown}>
         <form onSubmit={handleSubmit}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
             <h2 className="text-sm font-semibold">New Task</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-200"
-            >
+            <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-200">
               <X className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="p-4 space-y-4">
             <input
               ref={titleRef}
@@ -113,7 +136,7 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
               placeholder="Task title"
               className="w-full bg-gray-800 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            
+
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -140,14 +163,16 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
             >
               <Tag className="h-4 w-4 text-gray-400" />
               <span className="flex-1">
-                {tagIds.length > 0 ? `${tagIds.length} tag${tagIds.length > 1 ? 's' : ''}` : 'No Tags'}
+                {tagIds.length > 0
+                  ? `${tagIds.length} tag${tagIds.length > 1 ? 's' : ''}`
+                  : 'No Tags'}
               </span>
             </button>
 
             {tagIds.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {tagIds.map(tagId => {
-                  const tag = tags.find(t => t.id === tagId)
+                {tagIds.map((tagId) => {
+                  const tag = tags.find((t) => t.id === tagId)
                   if (!tag) return null
                   return (
                     <TagChip
@@ -155,7 +180,7 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
                       name={tag.name}
                       color={tag.color}
                       icon={tag.icon}
-                      onRemove={() => setTagIds(tagIds.filter(id => id !== tagId))}
+                      onRemove={() => setTagIds(tagIds.filter((id) => id !== tagId))}
                     />
                   )
                 })}
@@ -169,10 +194,9 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
             >
               <Calendar className="h-4 w-4 text-gray-400" />
               <span className="flex-1">
-                {deferDate || dueDate 
+                {deferDate || dueDate
                   ? `${deferDate ? `Defer: ${deferDate.toLocaleDateString()}` : ''} ${dueDate ? `Due: ${dueDate.toLocaleDateString()}` : ''}`
-                  : 'No Dates'
-                }
+                  : 'No Dates'}
               </span>
             </button>
 
@@ -212,20 +236,15 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
             >
               <MapPin className="h-4 w-4 text-gray-400" />
               <span className="flex-1">
-                {locationId 
-                  ? locations.find(l => l.id === locationId)?.name || 'Location'
-                  : 'No Location'
-                }
+                {locationId
+                  ? locations.find((l) => l.id === locationId)?.name || 'Location'
+                  : 'No Location'}
               </span>
             </button>
 
             {showLocationPicker && (
               <div className="bg-gray-800 rounded p-3">
-                <LocationPicker
-                  value={locationId}
-                  onChange={setLocationId}
-                  placeholder="Select location"
-                />
+                <LocationPicker selectedLocationId={locationId} onSelect={setLocationId} />
               </div>
             )}
 
@@ -236,10 +255,9 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
             >
               <Battery className="h-4 w-4 text-gray-400" />
               <span className="flex-1">
-                {timeOfDay || energyRequired 
+                {timeOfDay || energyRequired
                   ? `${timeOfDay ? `Time: ${timeOfDay}` : ''} ${energyRequired ? `Energy: ${energyRequired}` : ''}`
-                  : 'No Context'
-                }
+                  : 'No Context'}
               </span>
             </button>
 
@@ -271,7 +289,7 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="flex items-center gap-2 text-xs text-gray-400 mb-2">
                     <Battery className="h-3 w-3" />
@@ -297,7 +315,7 @@ export function QuickEntryModal({ isOpen, onClose }: QuickEntryModalProps) {
               </div>
             )}
           </div>
-          
+
           <div className="flex justify-end gap-2 px-4 py-3 border-t border-gray-800">
             <button
               type="button"

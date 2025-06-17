@@ -16,6 +16,7 @@ interface LocationState {
   currentLocation: GeolocationPosition | null
   locationError: string | null
   watchId: number | null
+  nearbyLocationId: string | null
   addLocation: (location: Omit<Location, 'id'>) => void
   updateLocation: (id: string, location: Partial<Location>) => void
   deleteLocation: (id: string) => void
@@ -52,6 +53,7 @@ export const useLocationStore = create<LocationState>()(
       currentLocation: null,
       locationError: null,
       watchId: null,
+      nearbyLocationId: null,
 
       addLocation: (locationData) => {
         const newLocation: Location = {
@@ -78,7 +80,29 @@ export const useLocationStore = create<LocationState>()(
       },
 
       setCurrentLocation: (position) => {
-        set({ currentLocation: position, locationError: null })
+        if (!position) {
+          set({ currentLocation: null, nearbyLocationId: null, locationError: null })
+          return
+        }
+
+        const state = get()
+        let nearbyLocationId: string | null = null
+
+        // Find the nearest location within its radius
+        for (const location of state.locations) {
+          const distance = calculateDistance(
+            position.coords.latitude,
+            position.coords.longitude,
+            location.latitude,
+            location.longitude
+          )
+          if (distance <= location.radius) {
+            nearbyLocationId = location.id
+            break
+          }
+        }
+
+        set({ currentLocation: position, nearbyLocationId, locationError: null })
       },
 
       setLocationError: (error) => {
@@ -127,12 +151,7 @@ export const useLocationStore = create<LocationState>()(
 )
 
 // Calculate distance between two points using Haversine formula
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371e3 // Earth's radius in meters
   const φ1 = (lat1 * Math.PI) / 180
   const φ2 = (lat2 * Math.PI) / 180

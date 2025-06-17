@@ -19,7 +19,9 @@ interface ContextFilterProps {
 export function ContextFilter({ onFilterChange }: ContextFilterProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [location, setLocation] = useState<string | null>(null)
-  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night' | null>(null)
+  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night' | null>(
+    null
+  )
   const [energyRequired, setEnergyRequired] = useState<EnergyLevel | null>(null)
 
   const handleLocationChange = (newLocation: string | null) => {
@@ -75,10 +77,7 @@ export function ContextFilter({ onFilterChange }: ContextFilterProps) {
 
             {/* Time Filter */}
             <div>
-              <TimeFilter
-                value={timeOfDay}
-                onChange={handleTimeChange}
-              />
+              <TimeFilter value={timeOfDay} onChange={handleTimeChange} />
             </div>
 
             {/* Energy Filter */}
@@ -87,11 +86,13 @@ export function ContextFilter({ onFilterChange }: ContextFilterProps) {
                 <Battery className="h-4 w-4" />
                 <span>Energy Required</span>
               </div>
-              
+
               <ToggleGroup.Root
                 type="single"
                 value={energyRequired || 'all'}
-                onValueChange={(val) => handleEnergyChange(val === 'all' ? null : val as EnergyLevel)}
+                onValueChange={(val) =>
+                  handleEnergyChange(val === 'all' ? null : (val as EnergyLevel))
+                }
                 className="flex items-center gap-2"
               >
                 <ToggleGroup.Item

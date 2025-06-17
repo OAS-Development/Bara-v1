@@ -27,18 +27,24 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
     setWatchId
   } = useLocationStore()
 
-  const handleSuccess = useCallback((position: GeolocationPosition) => {
-    setCurrentLocation(position)
-  }, [setCurrentLocation])
+  const handleSuccess = useCallback(
+    (position: GeolocationPosition) => {
+      setCurrentLocation(position)
+    },
+    [setCurrentLocation]
+  )
 
-  const handleError = useCallback((error: GeolocationPositionError) => {
-    const errorMessages: Record<number, string> = {
-      1: 'Location permission denied',
-      2: 'Position unavailable',
-      3: 'Request timeout'
-    }
-    setLocationError(errorMessages[error.code] || 'Unknown error')
-  }, [setLocationError])
+  const handleError = useCallback(
+    (error: GeolocationPositionError) => {
+      const errorMessages: Record<number, string> = {
+        1: 'Location permission denied',
+        2: 'Position unavailable',
+        3: 'Request timeout'
+      }
+      setLocationError(errorMessages[error.code] || 'Unknown error')
+    },
+    [setLocationError]
+  )
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -53,18 +59,10 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
     }
 
     if (watchPosition) {
-      const id = navigator.geolocation.watchPosition(
-        handleSuccess,
-        handleError,
-        geoOptions
-      )
+      const id = navigator.geolocation.watchPosition(handleSuccess, handleError, geoOptions)
       setWatchId(id)
     } else {
-      navigator.geolocation.getCurrentPosition(
-        handleSuccess,
-        handleError,
-        geoOptions
-      )
+      navigator.geolocation.getCurrentPosition(handleSuccess, handleError, geoOptions)
     }
   }, [
     enableHighAccuracy,
@@ -73,7 +71,8 @@ export function useGeolocation(options: UseGeolocationOptions = {}) {
     watchPosition,
     handleSuccess,
     handleError,
-    setWatchId
+    setWatchId,
+    setLocationError
   ])
 
   const stopWatching = useCallback(() => {

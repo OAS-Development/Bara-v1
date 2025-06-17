@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Flag } from 'lucide-react'
 
@@ -8,18 +8,18 @@ export default function SomedayPage() {
   const [projectCount, setProjectCount] = useState(0)
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchOnHoldProjects()
-  }, [])
-
-  const fetchOnHoldProjects = async () => {
+  const fetchOnHoldProjects = useCallback(async () => {
     const { count } = await supabase
       .from('projects')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'on-hold')
 
     setProjectCount(count || 0)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchOnHoldProjects()
+  }, [fetchOnHoldProjects])
 
   return (
     <div className="flex h-full">
@@ -38,7 +38,8 @@ export default function SomedayPage() {
 
         <div className="flex-1 p-6">
           <p className="text-gray-500">
-            Projects marked as &quot;On Hold&quot; will appear here. These are projects you might do someday but aren&apos;t committed to yet.
+            Projects marked as &quot;On Hold&quot; will appear here. These are projects you might do
+            someday but aren&apos;t committed to yet.
           </p>
         </div>
       </div>

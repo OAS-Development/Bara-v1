@@ -26,11 +26,8 @@ export function AISettings() {
     confidenceThreshold: 0.7
   })
 
-  const updateSetting = <K extends keyof AISettings>(
-    key: K,
-    value: AISettings[K]
-  ) => {
-    setSettings(prev => ({ ...prev, [key]: value }))
+  const updateSetting = <K extends keyof AISettings>(key: K, value: AISettings[K]) => {
+    setSettings((prev) => ({ ...prev, [key]: value }))
   }
 
   return (
@@ -47,9 +44,7 @@ export function AISettings() {
             <Sparkles className="h-5 w-5 text-blue-600" />
             <div>
               <p className="font-medium">Enable AI Features</p>
-              <p className="text-sm text-gray-600">
-                Turn on intelligent task management
-              </p>
+              <p className="text-sm text-gray-600">Turn on intelligent task management</p>
             </div>
           </div>
           <Switch.Root
@@ -66,7 +61,7 @@ export function AISettings() {
             {/* Feature Toggles */}
             <div className="space-y-4">
               <h3 className="font-medium text-gray-900">Features</h3>
-              
+
               <label className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium">Natural Language Input</span>
@@ -202,8 +197,8 @@ export function AISettings() {
             <div>
               <p className="text-sm font-medium text-blue-900">Privacy First</p>
               <p className="text-sm text-blue-800 mt-1">
-                All AI processing happens locally. Your data never leaves your device
-                unless you explicitly enable cloud features.
+                All AI processing happens locally. Your data never leaves your device unless you
+                explicitly enable cloud features.
               </p>
             </div>
           </div>

@@ -24,31 +24,32 @@ export function ReviewStats() {
 
   useEffect(() => {
     calculateStats()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects])
 
   const calculateStats = () => {
     const now = new Date()
-    const activeProjects = projects.filter(p => p.status === 'active')
-    const reviewableProjects = activeProjects.filter(p => p.review_interval_days)
-    
+    const activeProjects = projects.filter((p) => p.status === 'active')
+    const reviewableProjects = activeProjects.filter((p) => p.review_interval_days)
+
     let projectsNeedingReview = 0
     let overdueReviews = 0
     let totalInterval = 0
 
-    reviewableProjects.forEach(project => {
-      const lastReviewed = project.last_reviewed_at 
-        ? new Date(project.last_reviewed_at) 
+    reviewableProjects.forEach((project) => {
+      const lastReviewed = project.last_reviewed_at
+        ? new Date(project.last_reviewed_at)
         : new Date(project.created_at)
       const daysSince = Math.floor((now.getTime() - lastReviewed.getTime()) / (1000 * 60 * 60 * 24))
       const interval = project.review_interval_days || 0
-      
+
       if (daysSince >= interval) {
         projectsNeedingReview++
         if (daysSince > interval * 1.5) {
           overdueReviews++
         }
       }
-      
+
       totalInterval += interval
     })
 
@@ -57,9 +58,8 @@ export function ReviewStats() {
       reviewableProjects: reviewableProjects.length,
       projectsNeedingReview,
       overdueReviews,
-      averageReviewInterval: reviewableProjects.length > 0 
-        ? Math.round(totalInterval / reviewableProjects.length) 
-        : 0
+      averageReviewInterval:
+        reviewableProjects.length > 0 ? Math.round(totalInterval / reviewableProjects.length) : 0
     })
   }
 

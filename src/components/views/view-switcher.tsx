@@ -9,7 +9,7 @@ const views = [
   { name: 'Today', href: '/today', icon: Calendar, shortcut: '2' },
   { name: 'Upcoming', href: '/upcoming', icon: Clock, shortcut: '3' },
   { name: 'Anytime', href: '/anytime', icon: Archive, shortcut: '4' },
-  { name: 'Someday', href: '/someday', icon: Flag, shortcut: '5' },
+  { name: 'Someday', href: '/someday', icon: Flag, shortcut: '5' }
 ]
 
 export function ViewSwitcher() {
@@ -18,7 +18,7 @@ export function ViewSwitcher() {
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.metaKey || e.ctrlKey) {
-      const view = views.find(v => v.shortcut === e.key)
+      const view = views.find((v) => v.shortcut === e.key)
       if (view) {
         e.preventDefault()
         router.push(view.href)
@@ -36,16 +36,16 @@ export function ViewSwitcher() {
       {views.map((view) => {
         const Icon = view.icon
         const isActive = pathname === view.href
-        
+
         return (
           <button
             key={view.href}
             onClick={() => router.push(view.href)}
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
-              isActive 
-                ? "bg-blue-600 text-white" 
-                : "text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+              'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors',
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
             )}
             title={`${view.name} (⌘${view.shortcut})`}
           >
@@ -54,9 +54,9 @@ export function ViewSwitcher() {
           </button>
         )
       })}
-      
+
       <div className="mx-2 h-4 w-px bg-gray-700" />
-      
+
       <button
         className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-gray-400 hover:text-gray-200 hover:bg-gray-800 transition-colors"
         title="Custom Perspectives"

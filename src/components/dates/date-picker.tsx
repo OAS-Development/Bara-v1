@@ -11,14 +11,31 @@ interface DatePickerProps {
   className?: string
 }
 
-export function DatePicker({ value, onChange, placeholder = 'Select date', className }: DatePickerProps) {
+export function DatePicker({
+  value,
+  onChange,
+  placeholder = 'Select date',
+  className
+}: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(value || null)
   const [currentMonth, setCurrentMonth] = useState(value || new Date())
 
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-    'July', 'August', 'September', 'October', 'November', 'December']
-  
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ]
+
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
   }
@@ -40,10 +57,10 @@ export function DatePicker({ value, onChange, placeholder = 'Select date', class
   }
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     })
   }
 
@@ -67,12 +84,14 @@ export function DatePicker({ value, onChange, placeholder = 'Select date', class
 
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const isSelected = selectedDate && 
+      const isSelected =
+        selectedDate &&
         selectedDate.getDate() === day &&
         selectedDate.getMonth() === currentMonth.getMonth() &&
         selectedDate.getFullYear() === currentMonth.getFullYear()
-      
-      const isToday = new Date().getDate() === day &&
+
+      const isToday =
+        new Date().getDate() === day &&
         new Date().getMonth() === currentMonth.getMonth() &&
         new Date().getFullYear() === currentMonth.getFullYear()
 
@@ -81,9 +100,9 @@ export function DatePicker({ value, onChange, placeholder = 'Select date', class
           key={day}
           onClick={() => handleDateSelect(day)}
           className={cn(
-            "p-2 text-sm hover:bg-gray-100 rounded",
-            isSelected && "bg-blue-500 text-white hover:bg-blue-600",
-            isToday && !isSelected && "font-bold text-blue-600"
+            'p-2 text-sm hover:bg-gray-100 rounded',
+            isSelected && 'bg-blue-500 text-white hover:bg-blue-600',
+            isToday && !isSelected && 'font-bold text-blue-600'
           )}
         >
           {day}
@@ -99,12 +118,12 @@ export function DatePicker({ value, onChange, placeholder = 'Select date', class
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50",
+          'flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50',
           className
         )}
       >
         <Calendar className="h-4 w-4 text-gray-400" />
-        <span className={selectedDate ? "text-gray-900" : "text-gray-400"}>
+        <span className={selectedDate ? 'text-gray-900' : 'text-gray-400'}>
           {selectedDate ? formatDate(selectedDate) : placeholder}
         </span>
         {selectedDate && (
@@ -122,25 +141,16 @@ export function DatePicker({ value, onChange, placeholder = 'Select date', class
 
       {isOpen && (
         <>
-          <div 
-            className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div className="absolute top-full mt-2 bg-white rounded-lg shadow-lg border z-50 p-4 w-80">
             <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={goToPreviousMonth}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
+              <button onClick={goToPreviousMonth} className="p-1 hover:bg-gray-100 rounded">
                 ‹
               </button>
               <h3 className="text-sm font-medium">
                 {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
               </h3>
-              <button
-                onClick={goToNextMonth}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
+              <button onClick={goToNextMonth} className="p-1 hover:bg-gray-100 rounded">
                 ›
               </button>
             </div>

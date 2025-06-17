@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { ReviewInterface } from '@/components/review/review-interface'
-import { ReviewStats } from '@/components/review/review-stats'
+// import { ReviewInterface } from '@/components/review/review-interface'
+// import { ReviewStats } from '@/components/review/review-stats'
 import { CheckCircle, Play } from 'lucide-react'
+import { AsyncErrorBoundary } from '@/components/error-boundary'
 
-export default function ReviewPage() {
+function ReviewPageContent() {
   const [isReviewing, setIsReviewing] = useState(false)
 
   return (
@@ -15,9 +16,7 @@ export default function ReviewPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold">Review</h1>
-              <p className="text-sm text-gray-500">
-                Keep your projects up to date and relevant
-              </p>
+              <p className="text-sm text-gray-500">Keep your projects up to date and relevant</p>
             </div>
             {!isReviewing && (
               <button
@@ -33,19 +32,26 @@ export default function ReviewPage() {
 
         <div className="flex-1 overflow-y-auto">
           {isReviewing ? (
-            <ReviewInterface />
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold mb-2">Review Feature Coming Soon</h2>
+                <p className="text-gray-500">Project review functionality will be available in the next update.</p>
+              </div>
+            </div>
           ) : (
             <div className="p-6 space-y-6">
-              <ReviewStats />
-              
+              {/* <ReviewStats /> */}
+
               <div className="bg-gray-900 rounded-lg p-6">
                 <h2 className="text-lg font-semibold mb-4">About Reviews</h2>
                 <div className="space-y-3 text-sm text-gray-400">
                   <p>
-                    Regular reviews help you keep your project list current and focused on what matters most.
+                    Regular reviews help you keep your project list current and focused on what
+                    matters most.
                   </p>
                   <p>
-                    During a review, you&apos;ll go through each project that&apos;s due for review and consider:
+                    During a review, you&apos;ll go through each project that&apos;s due for review
+                    and consider:
                   </p>
                   <ul className="list-disc list-inside space-y-1 ml-4">
                     <li>Whether the project is still relevant</li>
@@ -62,5 +68,13 @@ export default function ReviewPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ReviewPage() {
+  return (
+    <AsyncErrorBoundary>
+      <ReviewPageContent />
+    </AsyncErrorBoundary>
   )
 }

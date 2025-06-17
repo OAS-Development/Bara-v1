@@ -1,7 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { TimeRule, TimeWindow, TimeOfDay, DayType, DEFAULT_TIME_WINDOWS } from '@/lib/context/time-rules'
+import {
+  TimeRule,
+  TimeWindow,
+  TimeOfDay,
+  DayType,
+  DEFAULT_TIME_WINDOWS
+} from '@/lib/context/time-rules'
 import { Clock, Calendar, Plus, Trash2, Edit2 } from 'lucide-react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as Switch from '@radix-ui/react-switch'
@@ -17,7 +23,7 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
 
   const handleSaveRule = (rule: TimeRule) => {
     if (editingRule) {
-      onRulesChange(rules.map(r => r.id === rule.id ? rule : r))
+      onRulesChange(rules.map((r) => (r.id === rule.id ? rule : r)))
     } else {
       onRulesChange([...rules, { ...rule, id: `rule_${Date.now()}` }])
     }
@@ -26,23 +32,25 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
   }
 
   const handleDeleteRule = (id: string) => {
-    onRulesChange(rules.filter(r => r.id !== id))
+    onRulesChange(rules.filter((r) => r.id !== id))
   }
 
   const handleToggleRule = (id: string) => {
-    onRulesChange(rules.map(r => 
-      r.id === id ? { ...r, enabled: !r.enabled } : r
-    ))
+    onRulesChange(rules.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)))
   }
 
-  const RuleDialog = ({ rule, onSave, onClose }: { 
-    rule?: TimeRule; 
-    onSave: (rule: TimeRule) => void; 
-    onClose: () => void 
+  const RuleDialog = ({
+    rule,
+    onSave,
+    onClose
+  }: {
+    rule?: TimeRule
+    onSave: (rule: TimeRule) => void
+    onClose: () => void
   }) => {
     const [name, setName] = useState(rule?.name || '')
     const [selectedWindows, setSelectedWindows] = useState<string[]>(
-      rule?.timeWindows.map(w => w.name) || []
+      rule?.timeWindows.map((w) => w.name) || []
     )
     const [selectedDayTypes, setSelectedDayTypes] = useState<DayType[]>(
       rule?.dayTypes || ['weekday']
@@ -50,11 +58,9 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault()
-      
-      const timeWindows = DEFAULT_TIME_WINDOWS.filter(w => 
-        selectedWindows.includes(w.name)
-      )
-      
+
+      const timeWindows = DEFAULT_TIME_WINDOWS.filter((w) => selectedWindows.includes(w.name))
+
       onSave({
         id: rule?.id || '',
         name,
@@ -75,9 +81,7 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rule Name
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rule Name</label>
                 <input
                   type="text"
                   value={name}
@@ -88,9 +92,7 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Time Windows
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Time Windows</label>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {DEFAULT_TIME_WINDOWS.map((window) => (
                     <label
@@ -104,7 +106,7 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
                           if (e.target.checked) {
                             setSelectedWindows([...selectedWindows, window.name])
                           } else {
-                            setSelectedWindows(selectedWindows.filter(w => w !== window.name))
+                            setSelectedWindows(selectedWindows.filter((w) => w !== window.name))
                           }
                         }}
                         className="rounded"
@@ -118,9 +120,7 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Active Days
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Active Days</label>
                 <div className="flex gap-2">
                   {(['weekday', 'weekend', 'holiday'] as DayType[]).map((dayType) => (
                     <label
@@ -134,7 +134,7 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
                           if (e.target.checked) {
                             setSelectedDayTypes([...selectedDayTypes, dayType])
                           } else {
-                            setSelectedDayTypes(selectedDayTypes.filter(d => d !== dayType))
+                            setSelectedDayTypes(selectedDayTypes.filter((d) => d !== dayType))
                           }
                         }}
                         className="rounded"
@@ -203,8 +203,8 @@ export function TimeRulesEditor({ rules, onRulesChange }: TimeRulesEditorProps) 
                 <div>
                   <p className="font-medium">{rule.name}</p>
                   <p className="text-sm text-gray-600">
-                    {rule.timeWindows.length} time window{rule.timeWindows.length !== 1 ? 's' : ''}, 
-                    {' '}{rule.dayTypes.join(', ')}
+                    {rule.timeWindows.length} time window{rule.timeWindows.length !== 1 ? 's' : ''},{' '}
+                    {rule.dayTypes.join(', ')}
                   </p>
                 </div>
               </div>

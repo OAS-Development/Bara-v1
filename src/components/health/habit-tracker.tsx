@@ -1,45 +1,54 @@
-'use client';
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import { useHabitStore } from '@/stores/habit-store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Check, X, Flame, Calendar, Plus } from 'lucide-react';
-import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import React, { useEffect, useState } from 'react'
+import { useHabitStore } from '@/stores/habit-store'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { Check, X, Flame, Calendar, Plus } from 'lucide-react'
+import { format, startOfWeek, addDays, isSameDay } from 'date-fns'
 
 interface HabitTrackerProps {
-  onAddHabit?: () => void;
+  onAddHabit?: () => void
 }
 
 export function HabitTracker({ onAddHabit }: HabitTrackerProps) {
-  const { habits, completions, fetchHabits, fetchCompletions, recordCompletion, removeCompletion, isHabitCompletedForDate, getStreak } = useHabitStore();
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [weekDates, setWeekDates] = useState<Date[]>([]);
+  const {
+    habits,
+    completions,
+    fetchHabits,
+    fetchCompletions,
+    recordCompletion,
+    removeCompletion,
+    isHabitCompletedForDate,
+    getStreak
+  } = useHabitStore()
+  const [selectedDate, setSelectedDate] = useState(new Date())
+  const [weekDates, setWeekDates] = useState<Date[]>([])
 
   useEffect(() => {
-    fetchHabits();
-    fetchCompletions();
-  }, [fetchHabits, fetchCompletions]);
+    fetchHabits()
+    fetchCompletions()
+  }, [fetchHabits, fetchCompletions])
 
   useEffect(() => {
-    const startDate = startOfWeek(selectedDate, { weekStartsOn: 0 });
-    const dates = Array.from({ length: 7 }, (_, i) => addDays(startDate, i));
-    setWeekDates(dates);
-  }, [selectedDate]);
+    const startDate = startOfWeek(selectedDate, { weekStartsOn: 0 })
+    const dates = Array.from({ length: 7 }, (_, i) => addDays(startDate, i))
+    setWeekDates(dates)
+  }, [selectedDate])
 
-  const activeHabits = habits.filter(h => h.active);
+  const activeHabits = habits.filter((h) => h.active)
 
   const handleToggleCompletion = async (habitId: string, date: Date) => {
-    const completions = useHabitStore.getState().getHabitCompletionsForDate(habitId, date);
-    
+    const completions = useHabitStore.getState().getHabitCompletionsForDate(habitId, date)
+
     if (completions.length > 0) {
-      await removeCompletion(completions[0].id);
+      await removeCompletion(completions[0].id)
     } else {
-      await recordCompletion(habitId);
+      await recordCompletion(habitId)
     }
-  };
+  }
 
   if (activeHabits.length === 0) {
     return (
@@ -60,7 +69,7 @@ export function HabitTracker({ onAddHabit }: HabitTrackerProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -80,21 +89,23 @@ export function HabitTracker({ onAddHabit }: HabitTrackerProps) {
         <div className="space-y-4">
           <div className="grid grid-cols-8 gap-2 text-sm">
             <div className="font-medium">Habit</div>
-            {weekDates.map(date => (
+            {weekDates.map((date) => (
               <div key={date.toISOString()} className="text-center">
                 <div className="font-medium">{format(date, 'EEE')}</div>
-                <div className={cn(
-                  "text-xs",
-                  isSameDay(date, new Date()) && "text-primary font-semibold"
-                )}>
+                <div
+                  className={cn(
+                    'text-xs',
+                    isSameDay(date, new Date()) && 'text-primary font-semibold'
+                  )}
+                >
                   {format(date, 'd')}
                 </div>
               </div>
             ))}
           </div>
 
-          {activeHabits.map(habit => {
-            const streak = getStreak(habit.id);
+          {activeHabits.map((habit) => {
+            const streak = getStreak(habit.id)
             return (
               <div key={habit.id} className="grid grid-cols-8 gap-2 items-center">
                 <div className="flex items-center gap-2">
@@ -106,19 +117,21 @@ export function HabitTracker({ onAddHabit }: HabitTrackerProps) {
                     </Badge>
                   )}
                 </div>
-                
-                {weekDates.map(date => {
-                  const isCompleted = isHabitCompletedForDate(habit.id, date);
-                  const isFuture = date > new Date();
-                  
+
+                {weekDates.map((date) => {
+                  const isCompleted = isHabitCompletedForDate(habit.id, date)
+                  const isFuture = date > new Date()
+
                   return (
                     <Button
                       key={`${habit.id}-${date.toISOString()}`}
-                      variant={isCompleted ? "default" : "outline"}
+                      variant={isCompleted ? 'default' : 'outline'}
                       size="icon"
                       className={cn(
-                        "h-8 w-8",
-                        isCompleted && habit.color && `bg-${habit.color}-500 hover:bg-${habit.color}-600`
+                        'h-8 w-8',
+                        isCompleted &&
+                          habit.color &&
+                          `bg-${habit.color}-500 hover:bg-${habit.color}-600`
                       )}
                       onClick={() => handleToggleCompletion(habit.id, date)}
                       disabled={isFuture}
@@ -129,10 +142,10 @@ export function HabitTracker({ onAddHabit }: HabitTrackerProps) {
                         <X className="w-4 h-4 text-muted-foreground" />
                       )}
                     </Button>
-                  );
+                  )
                 })}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -144,5 +157,5 @@ export function HabitTracker({ onAddHabit }: HabitTrackerProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

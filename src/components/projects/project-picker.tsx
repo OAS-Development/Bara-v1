@@ -28,7 +28,12 @@ export function ProjectPicker({ selectedProjectId, onSelectProject, onClose }: P
   }
 
   if (showNewProject) {
-    return <ProjectForm onClose={() => setShowNewProject(false)} onSuccess={() => setShowNewProject(false)} />
+    return (
+      <ProjectForm
+        onClose={() => setShowNewProject(false)}
+        onSuccess={() => setShowNewProject(false)}
+      />
+    )
   }
 
   return (
@@ -36,10 +41,7 @@ export function ProjectPicker({ selectedProjectId, onSelectProject, onClose }: P
       <div className="bg-white rounded-lg w-full max-w-md max-h-[60vh] flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Select Project</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -53,7 +55,7 @@ export function ProjectPicker({ selectedProjectId, onSelectProject, onClose }: P
               No Project (Inbox)
             </button>
           </div>
-          
+
           <div className="border-t">
             <ProjectList
               onSelectProject={handleSelectProject}

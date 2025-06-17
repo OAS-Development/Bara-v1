@@ -1,14 +1,20 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { useFinanceStore } from '@/stores/finance-store';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, DollarSign, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from 'react'
+import { useFinanceStore } from '@/stores/finance-store'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Plus, DollarSign, TrendingUp, TrendingDown, ArrowRightLeft } from 'lucide-react'
+import { toast } from 'sonner'
 
 const transactionCategories = {
   income: ['Salary', 'Freelance', 'Investment', 'Gift', 'Other Income'],
@@ -23,34 +29,34 @@ const transactionCategories = {
     'Travel',
     'Home',
     'Other Expense'
-  ],
-};
+  ]
+}
 
 export function TransactionEntry() {
-  const { accounts, addTransaction, fetchAccounts, loading } = useFinanceStore();
-  const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense');
-  const [accountId, setAccountId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
-  const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
+  const { accounts, addTransaction, fetchAccounts, loading } = useFinanceStore()
+  const [type, setType] = useState<'income' | 'expense' | 'transfer'>('expense')
+  const [accountId, setAccountId] = useState('')
+  const [amount, setAmount] = useState('')
+  const [category, setCategory] = useState('')
+  const [description, setDescription] = useState('')
+  const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
-    fetchAccounts();
-  }, [fetchAccounts]);
+    fetchAccounts()
+  }, [fetchAccounts])
 
   useEffect(() => {
     if (accounts.length > 0 && !accountId) {
-      setAccountId(accounts[0].id);
+      setAccountId(accounts[0].id)
     }
-  }, [accounts, accountId]);
+  }, [accounts, accountId])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+    e.preventDefault()
+
     if (!accountId || !amount || isNaN(Number(amount))) {
-      toast.error('Please fill in all required fields');
-      return;
+      toast.error('Please fill in all required fields')
+      return
     }
 
     try {
@@ -60,28 +66,28 @@ export function TransactionEntry() {
         type,
         category: category || undefined,
         description: description || undefined,
-        transaction_date: transactionDate,
-      });
-      
-      toast.success('Transaction added successfully');
-      setAmount('');
-      setDescription('');
-      setCategory('');
+        transaction_date: transactionDate
+      })
+
+      toast.success('Transaction added successfully')
+      setAmount('')
+      setDescription('')
+      setCategory('')
     } catch (error) {
-      toast.error('Failed to add transaction');
+      toast.error('Failed to add transaction')
     }
-  };
+  }
 
   const getIcon = () => {
     switch (type) {
       case 'income':
-        return <TrendingUp className="w-4 h-4 text-green-500" />;
+        return <TrendingUp className="w-4 h-4 text-green-500" />
       case 'expense':
-        return <TrendingDown className="w-4 h-4 text-red-500" />;
+        return <TrendingDown className="w-4 h-4 text-red-500" />
       case 'transfer':
-        return <ArrowRightLeft className="w-4 h-4 text-blue-500" />;
+        return <ArrowRightLeft className="w-4 h-4 text-blue-500" />
     }
-  };
+  }
 
   return (
     <Card>
@@ -131,7 +137,7 @@ export function TransactionEntry() {
                   <SelectValue placeholder="Select account" />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map(account => (
+                  {accounts.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
                       <div className="flex items-center justify-between gap-2">
                         <span>{account.name}</span>
@@ -171,7 +177,10 @@ export function TransactionEntry() {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(type === 'income' ? transactionCategories.income : transactionCategories.expense).map(cat => (
+                  {(type === 'income'
+                    ? transactionCategories.income
+                    : transactionCategories.expense
+                  ).map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
                     </SelectItem>
@@ -208,5 +217,5 @@ export function TransactionEntry() {
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }

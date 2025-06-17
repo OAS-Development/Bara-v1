@@ -57,9 +57,11 @@ export class ImportExecutor {
 
     try {
       this.updateProgress('preparing', 'Validating import data...')
-      
+
       // Get current user
-      const { data: { user } } = await this.supabase.auth.getUser()
+      const {
+        data: { user }
+      } = await this.supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
       // Create mapper with user ID
@@ -75,9 +77,10 @@ export class ImportExecutor {
       }
 
       const mappedData = mapper.mapOmniFocusData(data)
-      
+
       // Update total items
-      this.progress.total = mappedData.projects.length + mappedData.tags.length + mappedData.tasks.length
+      this.progress.total =
+        mappedData.projects.length + mappedData.tags.length + mappedData.tasks.length
 
       // Import in order: tags first, then projects, then tasks
       this.updateProgress('tags', 'Importing tags...')
@@ -90,7 +93,7 @@ export class ImportExecutor {
       await this.importTasks(mappedData.tasks, mappedData.taskTags, result)
 
       this.updateProgress('completing', 'Finalizing import...')
-      
+
       // Add import marker tag to all imported tasks if requested
       if (this.options.preserveHierarchy) {
         await this.addImportMetadata(user.id)
@@ -98,8 +101,10 @@ export class ImportExecutor {
 
       result.success = true
       result.duration = Date.now() - startTime
-      this.updateProgress('done', `Import completed! ${result.tasksImported} tasks, ${result.projectsImported} projects, ${result.tagsImported} tags imported.`)
-
+      this.updateProgress(
+        'done',
+        `Import completed! ${result.tasksImported} tasks, ${result.projectsImported} projects, ${result.tagsImported} tags imported.`
+      )
     } catch (error) {
       result.errors.push(error instanceof Error ? error.message : 'Unknown error')
       this.updateProgress('error', 'Import failed')
@@ -111,23 +116,23 @@ export class ImportExecutor {
 
   private async importTags(tags: any[], result: ImportResult): Promise<void> {
     const batchSize = 50
-    
+
     for (let i = 0; i < tags.length; i += batchSize) {
       const batch = tags.slice(i, i + batchSize)
-      
+
       try {
         // Check for existing tags
-        const tagNames = batch.map(t => t.name)
+        const tagNames = batch.map((t) => t.name)
         const { data: existing } = await this.supabase
           .from('tags')
           .select('id, name')
           .eq('user_id', batch[0].user_id)
           .in('name', tagNames)
 
-        const existingNames = new Set(existing?.map(e => e.name) || [])
-        
+        const existingNames = new Set(existing?.map((e) => e.name) || [])
+
         // Filter out duplicates based on strategy
-        const toImport = batch.filter(tag => {
+        const toImport = batch.filter((tag) => {
           if (existingNames.has(tag.name)) {
             if (this.options.duplicateStrategy === 'skip') {
               result.duplicatesSkipped++
@@ -142,9 +147,7 @@ export class ImportExecutor {
         })
 
         if (toImport.length > 0) {
-          const { error } = await this.supabase
-            .from('tags')
-            .insert(toImport)
+          const { error } = await this.supabase.from('tags').insert(toImport)
 
           if (error) throw error
           result.tagsImported += toImport.length
@@ -183,9 +186,7 @@ export class ImportExecutor {
           }
         }
 
-        const { error } = await this.supabase
-          .from('projects')
-          .insert(project)
+        const { error } = await this.supabase.from('projects').insert(project)
 
         if (error) throw error
         result.projectsImported++
@@ -202,14 +203,14 @@ export class ImportExecutor {
 
   private async importTasks(tasks: any[], taskTags: any[], result: ImportResult): Promise<void> {
     const batchSize = 100
-    
+
     // Import tasks in batches
     for (let i = 0; i < tasks.length; i += batchSize) {
       const batch = tasks.slice(i, i + batchSize)
-      
+
       try {
         // Check for duplicates
-        const taskTitles = batch.map(t => t.title)
+        const taskTitles = batch.map((t) => t.title)
         const { data: existing } = await this.supabase
           .from('tasks')
           .select('id, title, project_id')
@@ -217,11 +218,11 @@ export class ImportExecutor {
           .in('title', taskTitles)
 
         const existingMap = new Map(
-          existing?.map(e => [`${e.title}-${e.project_id || 'inbox'}`, e]) || []
+          existing?.map((e) => [`${e.title}-${e.project_id || 'inbox'}`, e]) || []
         )
-        
+
         // Filter out duplicates based on strategy
-        const toImport = batch.filter(task => {
+        const toImport = batch.filter((task) => {
           const key = `${task.title}-${task.project_id || 'inbox'}`
           if (existingMap.has(key)) {
             if (this.options.duplicateStrategy === 'skip') {
@@ -236,9 +237,7 @@ export class ImportExecutor {
         })
 
         if (toImport.length > 0) {
-          const { error } = await this.supabase
-            .from('tasks')
-            .insert(toImport)
+          const { error } = await this.supabase.from('tasks').insert(toImport)
 
           if (error) throw error
           result.tasksImported += toImport.length
@@ -259,10 +258,7 @@ export class ImportExecutor {
         // Import in smaller batches to avoid conflicts
         for (let i = 0; i < taskTags.length; i += 100) {
           const batch = taskTags.slice(i, i + 100)
-          await this.supabase
-            .from('task_tags')
-            .insert(batch)
-            .select() // Ignore duplicates
+          await this.supabase.from('task_tags').insert(batch).select() // Ignore duplicates
         }
       } catch (error) {
         // Non-critical error - just log it
@@ -276,7 +272,7 @@ export class ImportExecutor {
       // Create or get import tag
       const importDate = new Date().toISOString().split('T')[0]
       const tagName = `imported-${importDate}`
-      
+
       let tagId: string
       const { data: existingTag } = await this.supabase
         .from('tags')
@@ -312,15 +308,12 @@ export class ImportExecutor {
         .gte('created_at', oneMinuteAgo)
 
       if (recentTasks && recentTasks.length > 0) {
-        const taskTagInserts = recentTasks.map(task => ({
+        const taskTagInserts = recentTasks.map((task) => ({
           task_id: task.id,
           tag_id: tagId
         }))
 
-        await this.supabase
-          .from('task_tags')
-          .insert(taskTagInserts)
-          .select() // Ignore duplicates
+        await this.supabase.from('task_tags').insert(taskTagInserts).select() // Ignore duplicates
       }
     } catch (error) {
       // Non-critical - just log
@@ -357,7 +350,7 @@ export class ImportExecutor {
 
     if (result.errors.length > 0) {
       report.push('## Errors')
-      result.errors.forEach(error => {
+      result.errors.forEach((error) => {
         report.push(`- ${error}`)
       })
       report.push('')
@@ -365,7 +358,7 @@ export class ImportExecutor {
 
     if (this.progress.errors.length > 0) {
       report.push('## Warnings')
-      this.progress.errors.forEach(warning => {
+      this.progress.errors.forEach((warning) => {
         report.push(`- ${warning}`)
       })
     }

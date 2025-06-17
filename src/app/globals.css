@@ -10,66 +10,66 @@
   select {
     @apply text-gray-900 bg-white;
   }
-  
+
   input::placeholder,
   textarea::placeholder {
     @apply text-gray-400;
   }
-  
+
   input:focus,
   textarea:focus,
   select:focus {
     @apply text-gray-900 bg-white ring-2 ring-blue-500;
   }
-  
+
   /* Dark mode */
   .dark input,
   .dark textarea,
   .dark select {
     @apply text-gray-100 bg-gray-800;
   }
-  
+
   .dark input::placeholder,
   .dark textarea::placeholder {
     @apply text-gray-500;
   }
-  
+
   .dark input:focus,
   .dark textarea:focus,
   .dark select:focus {
     @apply text-gray-100 bg-gray-800 ring-2 ring-blue-400;
   }
-  
+
   /* Ensure proper contrast for all form elements */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="number"],
-  input[type="search"],
-  input[type="tel"],
-  input[type="url"],
-  input[type="date"],
-  input[type="datetime-local"],
-  input[type="month"],
-  input[type="time"],
-  input[type="week"],
+  input[type='text'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number'],
+  input[type='search'],
+  input[type='tel'],
+  input[type='url'],
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='month'],
+  input[type='time'],
+  input[type='week'],
   textarea,
   select {
     @apply border border-gray-300;
   }
-  
-  .dark input[type="text"],
-  .dark input[type="email"],
-  .dark input[type="password"],
-  .dark input[type="number"],
-  .dark input[type="search"],
-  .dark input[type="tel"],
-  .dark input[type="url"],
-  .dark input[type="date"],
-  .dark input[type="datetime-local"],
-  .dark input[type="month"],
-  .dark input[type="time"],
-  .dark input[type="week"],
+
+  .dark input[type='text'],
+  .dark input[type='email'],
+  .dark input[type='password'],
+  .dark input[type='number'],
+  .dark input[type='search'],
+  .dark input[type='tel'],
+  .dark input[type='url'],
+  .dark input[type='date'],
+  .dark input[type='datetime-local'],
+  .dark input[type='month'],
+  .dark input[type='time'],
+  .dark input[type='week'],
   .dark textarea,
   .dark select {
     @apply border-gray-600;

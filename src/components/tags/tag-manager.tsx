@@ -43,13 +43,8 @@ function TagForm({ tag, onClose, onSuccess }: TagFormProps) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">
-            {tag ? 'Edit Tag' : 'New Tag'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
+          <h2 className="text-lg font-semibold">{tag ? 'Edit Tag' : 'New Tag'}</h2>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -57,9 +52,7 @@ function TagForm({ tag, onClose, onSuccess }: TagFormProps) {
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tag Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tag Name</label>
               <input
                 type="text"
                 value={formData.name}
@@ -71,9 +64,7 @@ function TagForm({ tag, onClose, onSuccess }: TagFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Color
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -92,9 +83,7 @@ function TagForm({ tag, onClose, onSuccess }: TagFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Icon (Emoji)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Icon (Emoji)</label>
               <input
                 type="text"
                 value={formData.icon}
@@ -105,9 +94,7 @@ function TagForm({ tag, onClose, onSuccess }: TagFormProps) {
             </div>
 
             <div className="pt-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Preview
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Preview</label>
               <div className="flex justify-center p-4 bg-gray-50 rounded">
                 <TagChip
                   name={formData.name || 'Tag Name'}
@@ -181,28 +168,17 @@ export function TagManager() {
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {tags.map(tag => (
+          {tags.map((tag) => (
             <div
               key={tag.id}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
             >
-              <TagChip
-                name={tag.name}
-                color={tag.color}
-                icon={tag.icon}
-                size="md"
-              />
+              <TagChip name={tag.name} color={tag.color} icon={tag.icon} size="md" />
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleEdit(tag)}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
+                <button onClick={() => handleEdit(tag)} className="p-1 hover:bg-gray-200 rounded">
                   <Edit2 className="h-4 w-4 text-gray-500" />
                 </button>
-                <button
-                  onClick={() => handleDelete(tag)}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
+                <button onClick={() => handleDelete(tag)} className="p-1 hover:bg-gray-200 rounded">
                   <Trash2 className="h-4 w-4 text-gray-500" />
                 </button>
               </div>
@@ -211,12 +187,7 @@ export function TagManager() {
         </div>
       )}
 
-      {(showForm || editingTag) && (
-        <TagForm
-          tag={editingTag}
-          onClose={handleCloseForm}
-        />
-      )}
+      {(showForm || editingTag) && <TagForm tag={editingTag} onClose={handleCloseForm} />}
     </div>
   )
 }

@@ -112,7 +112,7 @@ export class OmniFocusParser {
         const lat = locationEl.getAttribute('latitude')
         const lng = locationEl.getAttribute('longitude')
         const radius = locationEl.getAttribute('radius')
-        
+
         if (lat && lng) {
           context.location = {
             latitude: parseFloat(lat),
@@ -130,10 +130,10 @@ export class OmniFocusParser {
 
   private parseTasks(doc: Document): OFTask[] {
     const tasks: OFTask[] = []
-    
+
     // Parse standalone tasks (not in projects)
     const taskElements = doc.querySelectorAll('omnifocus > task')
-    
+
     taskElements.forEach((element, index) => {
       const task = this.parseTask(element, index)
       if (task) {
@@ -161,11 +161,11 @@ export class OmniFocusParser {
     // Parse dates
     const deferDateStr = element.getAttribute('defer-date')
     const dueDateStr = element.getAttribute('due-date')
-    
+
     if (deferDateStr) {
       task.deferDate = new Date(deferDateStr)
     }
-    
+
     if (dueDateStr) {
       task.dueDate = new Date(dueDateStr)
     }
@@ -200,11 +200,12 @@ export class OmniFocusParser {
   // Utility method to get statistics
   getStatistics(archive: OFArchive) {
     const totalProjects = archive.projects.length
-    const activeProjects = archive.projects.filter(p => p.status === 'active').length
-    const totalTasks = archive.tasks.length + 
-      archive.projects.reduce((sum, p) => sum + p.tasks.length, 0)
-    const completedTasks = archive.tasks.filter(t => t.completed).length +
-      archive.projects.reduce((sum, p) => sum + p.tasks.filter(t => t.completed).length, 0)
+    const activeProjects = archive.projects.filter((p) => p.status === 'active').length
+    const totalTasks =
+      archive.tasks.length + archive.projects.reduce((sum, p) => sum + p.tasks.length, 0)
+    const completedTasks =
+      archive.tasks.filter((t) => t.completed).length +
+      archive.projects.reduce((sum, p) => sum + p.tasks.filter((t) => t.completed).length, 0)
     const totalContexts = archive.contexts.length
 
     return {
@@ -213,7 +214,7 @@ export class OmniFocusParser {
       totalTasks,
       completedTasks,
       totalContexts,
-      completionRate: totalTasks > 0 ? (completedTasks / totalTasks * 100).toFixed(1) : '0'
+      completionRate: totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : '0'
     }
   }
 }

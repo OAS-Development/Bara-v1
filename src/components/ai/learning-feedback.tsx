@@ -66,9 +66,7 @@ export function LearningFeedback({ task, action, onClose }: LearningFeedbackProp
         <Dialog.Overlay className="fixed inset-0 bg-black/30" />
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
           <div className="flex items-center justify-between mb-4">
-            <Dialog.Title className="text-lg font-semibold">
-              Help AI Learn
-            </Dialog.Title>
+            <Dialog.Title className="text-lg font-semibold">Help AI Learn</Dialog.Title>
             <button
               onClick={onClose}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
@@ -96,9 +94,11 @@ export function LearningFeedback({ task, action, onClose }: LearningFeedbackProp
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <ThumbsUp className={`h-5 w-5 mx-auto ${
-                    feedback === 'helpful' ? 'text-green-600' : 'text-gray-400'
-                  }`} />
+                  <ThumbsUp
+                    className={`h-5 w-5 mx-auto ${
+                      feedback === 'helpful' ? 'text-green-600' : 'text-gray-400'
+                    }`}
+                  />
                   <p className="text-sm mt-1">Helpful</p>
                 </button>
                 <button
@@ -109,9 +109,11 @@ export function LearningFeedback({ task, action, onClose }: LearningFeedbackProp
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <ThumbsDown className={`h-5 w-5 mx-auto ${
-                    feedback === 'not-helpful' ? 'text-red-600' : 'text-gray-400'
-                  }`} />
+                  <ThumbsDown
+                    className={`h-5 w-5 mx-auto ${
+                      feedback === 'not-helpful' ? 'text-red-600' : 'text-gray-400'
+                    }`}
+                  />
                   <p className="text-sm mt-1">Not Helpful</p>
                 </button>
               </div>

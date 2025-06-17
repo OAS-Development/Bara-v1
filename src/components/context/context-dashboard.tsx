@@ -11,7 +11,7 @@ export function ContextDashboard() {
   const [context, setContext] = useState<CombinedContext | null>(null)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   const contextEngine = new ContextEngine()
   const timeRules = new TimeRules()
 
@@ -19,6 +19,7 @@ export function ContextDashboard() {
     loadContext()
     const interval = setInterval(loadContext, 60000) // Update every minute
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadContext = async () => {
@@ -47,10 +48,14 @@ export function ContextDashboard() {
 
   const getTimeIcon = () => {
     switch (context.timeOfDay) {
-      case 'morning': return '🌅'
-      case 'afternoon': return '☀️'
-      case 'evening': return '🌇'
-      case 'night': return '🌙'
+      case 'morning':
+        return '🌅'
+      case 'afternoon':
+        return '☀️'
+      case 'evening':
+        return '🌇'
+      case 'night':
+        return '🌙'
     }
   }
 
@@ -131,10 +136,7 @@ export function ContextDashboard() {
       )}
 
       <div className="flex justify-end">
-        <button
-          onClick={loadContext}
-          className="text-sm text-blue-600 hover:text-blue-700"
-        >
+        <button onClick={loadContext} className="text-sm text-blue-600 hover:text-blue-700">
           Refresh Context
         </button>
       </div>

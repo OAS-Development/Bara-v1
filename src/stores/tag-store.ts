@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { createClient } from '@/lib/supabase/client'
+import { api, isApiError, type ApiError } from '@/lib/api/client'
 import { Database } from '@/types/database.types'
 
 type Tag = Database['public']['Tables']['tags']['Row']
@@ -14,17 +14,16 @@ interface TagState {
   tags: Tag[]
   tagsTree: TagWithChildren[]
   loading: boolean
-  error: string | null
-  
+  error: ApiError | null
+
   fetchTags: () => Promise<void>
   createTag: (tag: TagInsert) => Promise<Tag | null>
   updateTag: (id: string, update: TagUpdate) => Promise<void>
   deleteTag: (id: string) => Promise<void>
   getTagById: (id: string) => Tag | undefined
   buildTagTree: (tags: Tag[]) => TagWithChildren[]
+  clearError: () => void
 }
-
-const supabase = createClient()
 
 export const useTagStore = create<TagState>((set, get) => ({
   tags: [],
@@ -33,91 +32,120 @@ export const useTagStore = create<TagState>((set, get) => ({
   error: null,
 
   fetchTags: async () => {
-    set({ loading: true })
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('No authenticated user')
+    set({ loading: true, error: null })
+    
+    const userResult = await api.query(
+      () => api.client.auth.getUser(),
+      { showToast: false }
+    )
 
-      const { data, error } = await supabase
+    if (isApiError(userResult) || !userResult.data.user) {
+      set({ loading: false, error: { message: 'No authenticated user' } })
+      return
+    }
+
+    const result = await api.query(
+      () => api.client
         .from('tags')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userResult.data.user.id)
         .order('position', { ascending: true })
-        .order('name', { ascending: true })
+        .order('name', { ascending: true }),
+      { errorContext: 'Failed to fetch tags' }
+    )
 
-      if (error) throw error
-
-      const tags = data || []
-      const tagsTree = get().buildTagTree(tags)
-      
-      set({ tags, tagsTree, loading: false, error: null })
-    } catch (error) {
-      set({ loading: false, error: error instanceof Error ? error.message : 'Failed to fetch tags' })
+    if (isApiError(result)) {
+      set({ loading: false, error: result.error })
+      return
     }
+
+    const tags = result.data
+    const tagsTree = get().buildTagTree(tags)
+
+    set({ tags, tagsTree, loading: false, error: null })
   },
 
   createTag: async (tag) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('No authenticated user')
+    set({ error: null })
+    
+    const userResult = await api.query(
+      () => api.client.auth.getUser(),
+      { showToast: false }
+    )
 
-      const { data, error } = await supabase
-        .from('tags')
-        .insert({ ...tag, user_id: user.id })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      const tags = [...get().tags, data]
-      const tagsTree = get().buildTagTree(tags)
-      set({ tags, tagsTree })
-      
-      return data
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to create tag' })
+    if (isApiError(userResult) || !userResult.data.user) {
+      set({ error: { message: 'No authenticated user' } })
       return null
     }
+
+    const result = await api.mutate(
+      () => api.client
+        .from('tags')
+        .insert({ ...tag, user_id: userResult.data.user.id })
+        .select()
+        .single(),
+      { 
+        successMessage: 'Tag created successfully',
+        errorContext: 'Failed to create tag' 
+      }
+    )
+
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return null
+    }
+
+    const tags = [...get().tags, result.data]
+    const tagsTree = get().buildTagTree(tags)
+    set({ tags, tagsTree })
+
+    return result.data
   },
 
   updateTag: async (id, update) => {
-    try {
-      const { error } = await supabase
-        .from('tags')
-        .update(update)
-        .eq('id', id)
+    set({ error: null })
+    
+    const result = await api.mutate(
+      () => api.client.from('tags').update(update).eq('id', id),
+      { 
+        successMessage: 'Tag updated successfully',
+        errorContext: 'Failed to update tag' 
+      }
+    )
 
-      if (error) throw error
-
-      const tags = get().tags.map(t => 
-        t.id === id ? { ...t, ...update } : t
-      )
-      const tagsTree = get().buildTagTree(tags)
-      set({ tags, tagsTree })
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to update tag' })
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return
     }
+
+    const tags = get().tags.map((t) => (t.id === id ? { ...t, ...update } : t))
+    const tagsTree = get().buildTagTree(tags)
+    set({ tags, tagsTree })
   },
 
   deleteTag: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('tags')
-        .delete()
-        .eq('id', id)
+    set({ error: null })
+    
+    const result = await api.mutate(
+      () => api.client.from('tags').delete().eq('id', id),
+      { 
+        successMessage: 'Tag deleted successfully',
+        errorContext: 'Failed to delete tag' 
+      }
+    )
 
-      if (error) throw error
-
-      const tags = get().tags.filter(t => t.id !== id)
-      const tagsTree = get().buildTagTree(tags)
-      set({ tags, tagsTree })
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to delete tag' })
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return
     }
+
+    const tags = get().tags.filter((t) => t.id !== id)
+    const tagsTree = get().buildTagTree(tags)
+    set({ tags, tagsTree })
   },
 
   getTagById: (id) => {
-    return get().tags.find(t => t.id === id)
+    return get().tags.find((t) => t.id === id)
   },
 
   buildTagTree: (tags) => {
@@ -125,12 +153,12 @@ export const useTagStore = create<TagState>((set, get) => ({
     const rootTags: TagWithChildren[] = []
 
     // First pass: create all tags
-    tags.forEach(tag => {
+    tags.forEach((tag) => {
       tagMap.set(tag.id, { ...tag, children: [] })
     })
 
     // Second pass: build hierarchy
-    tags.forEach(tag => {
+    tags.forEach((tag) => {
       const tagWithChildren = tagMap.get(tag.id)!
       if (tag.parent_id) {
         const parent = tagMap.get(tag.parent_id)
@@ -149,7 +177,7 @@ export const useTagStore = create<TagState>((set, get) => ({
         if (posDiff !== 0) return posDiff
         return (a.name ?? '').localeCompare(b.name ?? '')
       })
-      tags.forEach(t => {
+      tags.forEach((t) => {
         if (t.children && t.children.length > 0) {
           sortTags(t.children)
         }
@@ -158,5 +186,7 @@ export const useTagStore = create<TagState>((set, get) => ({
 
     sortTags(rootTags)
     return rootTags
-  }
+  },
+
+  clearError: () => set({ error: null })
 }))

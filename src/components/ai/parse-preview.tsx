@@ -19,9 +19,12 @@ export function ParsePreview({ task, onConfirm, onCancel, onEdit }: ParsePreview
     })
   }
 
-  const confidenceColor = task.confidence > 0.8 ? 'text-green-600' : 
-                         task.confidence > 0.6 ? 'text-yellow-600' : 
-                         'text-red-600'
+  const confidenceColor =
+    task.confidence > 0.8
+      ? 'text-green-600'
+      : task.confidence > 0.6
+        ? 'text-yellow-600'
+        : 'text-red-600'
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
@@ -43,7 +46,9 @@ export function ParsePreview({ task, onConfirm, onCancel, onEdit }: ParsePreview
               <p className="text-sm font-medium text-yellow-900">Assumptions made:</p>
               <ul className="mt-1 space-y-0.5">
                 {task.ambiguities.map((ambiguity, index) => (
-                  <li key={index} className="text-sm text-yellow-800">• {ambiguity}</li>
+                  <li key={index} className="text-sm text-yellow-800">
+                    • {ambiguity}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -54,9 +59,7 @@ export function ParsePreview({ task, onConfirm, onCancel, onEdit }: ParsePreview
       <div className="space-y-3">
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Task Title
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
           <input
             type="text"
             value={task.title}
@@ -68,9 +71,7 @@ export function ParsePreview({ task, onConfirm, onCancel, onEdit }: ParsePreview
         {/* Notes */}
         {task.notes && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notes
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
             <textarea
               value={task.notes}
               onChange={(e) => onEdit('notes', e.target.value)}
@@ -141,10 +142,7 @@ export function ParsePreview({ task, onConfirm, onCancel, onEdit }: ParsePreview
             </div>
             <div className="flex flex-wrap gap-2">
               {task.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm"
-                >
+                <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm">
                   {tag}
                 </span>
               ))}

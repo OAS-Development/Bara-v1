@@ -1,0 +1,94 @@
+# Session Learning Data Structure
+# Structured learning database for progressive improvement
+
+## sessions_learning.json
+{
+  "project": "Bara-v1",
+  "total_sessions": 8,
+  "learning_patterns": {
+    "context_usage": {
+      "quality_sessions": {
+        "average_multiplier": 2.1,
+        "auto_compress_rate": 0.75,
+        "recommended_max_duration": 75,
+        "sessions": [
+          {
+            "session": 8,
+            "planned_context": "60-70%",
+            "actual_context": "300%+",
+            "auto_compressed": 3,
+            "lesson": "Quality sessions are 2.5x more context intensive"
+          }
+        ]
+      },
+      "feature_sessions": {
+        "average_multiplier": 1.2,
+        "auto_compress_rate": 0.1,
+        "recommended_max_duration": 90
+      }
+    },
+    "scope_accuracy": {
+      "overambitious_sessions": [8],
+      "well_scoped_sessions": [1, 2, 3, 4, 5, 6, 7],
+      "patterns": {
+        "quality_after_feature": "reduce_scope_50%",
+        "multiple_components": "add_30%_time",
+        "database_work": "high_context_usage"
+      }
+    },
+    "actor_discipline": {
+      "code_generation_violations": [
+        {
+          "session": "8.1_initial",
+          "violation": "Generated TypeScript code in prompt",
+          "correction": "Use instruction-only format",
+          "times_repeated": 3
+        }
+      ],
+      "context_analysis_skips": [],
+      "incomplete_prompts": []
+    }
+  },
+  "prediction_models": {
+    "context_usage_predictor": {
+      "quality_session": "base_estimate * 2.1",
+      "feature_session": "base_estimate * 1.2", 
+      "post_quality_session": "base_estimate * 0.6"
+    },
+    "scope_adjustment": {
+      "after_auto_compress": "reduce_50%",
+      "quality_session": "max_75_minutes",
+      "database_heavy": "add_25%_time"
+    }
+  },
+  "improvement_trends": {
+    "sessions_1_4": "Well scoped, good progression",
+    "sessions_5_7": "Appropriate mega sessions",
+    "session_8": "Overambitious quality session - key learning",
+    "session_8.1": "Applied learning - appropriate scope reduction"
+  }
+}
+
+## planning_checklist.json
+{
+  "mandatory_checks": [
+    {
+      "check": "context_analysis",
+      "requirement": "Read previous session status",
+      "validation": "Must identify auto-compress events",
+      "violation_count": 1
+    },
+    {
+      "check": "no_code_generation", 
+      "requirement": "Instructions only, no code",
+      "validation": "No TypeScript/React in prompts",
+      "violation_count": 3
+    },
+    {
+      "check": "complete_prompt",
+      "requirement": "Copy-pasteable prompt with all requirements",
+      "validation": "Project path, permissions, notification",
+      "violation_count": 0
+    }
+  ]
+}

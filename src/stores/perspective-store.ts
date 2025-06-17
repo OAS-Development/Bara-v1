@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { createClient } from '@/lib/supabase/client'
+import { api, isApiError, type ApiError } from '@/lib/api/client'
 import { Database } from '@/types/database.types'
 
 type Perspective = Database['public']['Tables']['perspectives']['Row']
@@ -9,16 +9,15 @@ type PerspectiveUpdate = Database['public']['Tables']['perspectives']['Update']
 interface PerspectiveState {
   perspectives: Perspective[]
   loading: boolean
-  error: string | null
-  
+  error: ApiError | null
+
   fetchPerspectives: () => Promise<void>
   createPerspective: (perspective: PerspectiveInsert) => Promise<Perspective | null>
   updatePerspective: (id: string, update: PerspectiveUpdate) => Promise<void>
   deletePerspective: (id: string) => Promise<void>
   getPerspectiveById: (id: string) => Perspective | undefined
+  clearError: () => void
 }
-
-const supabase = createClient()
 
 export const usePerspectiveStore = create<PerspectiveState>((set, get) => ({
   perspectives: [],
@@ -26,83 +25,114 @@ export const usePerspectiveStore = create<PerspectiveState>((set, get) => ({
   error: null,
 
   fetchPerspectives: async () => {
-    set({ loading: true })
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('No authenticated user')
+    set({ loading: true, error: null })
+    
+    const userResult = await api.query(
+      () => api.client.auth.getUser(),
+      { showToast: false }
+    )
 
-      const { data, error } = await supabase
+    if (isApiError(userResult) || !userResult.data.user) {
+      set({ loading: false, error: { message: 'No authenticated user' } })
+      return
+    }
+
+    const result = await api.query(
+      () => api.client
         .from('perspectives')
         .select('*')
-        .eq('user_id', user.id)
-        .order('position', { ascending: true })
+        .eq('user_id', userResult.data.user.id)
+        .order('position', { ascending: true }),
+      { errorContext: 'Failed to fetch perspectives' }
+    )
 
-      if (error) throw error
-
-      set({ perspectives: data || [], loading: false, error: null })
-    } catch (error) {
-      set({ loading: false, error: error instanceof Error ? error.message : 'Failed to fetch perspectives' })
+    if (isApiError(result)) {
+      set({ loading: false, error: result.error })
+      return
     }
+
+    set({ perspectives: result.data, loading: false, error: null })
   },
 
   createPerspective: async (perspective) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('No authenticated user')
+    set({ error: null })
+    
+    const userResult = await api.query(
+      () => api.client.auth.getUser(),
+      { showToast: false }
+    )
 
-      const { data, error } = await supabase
-        .from('perspectives')
-        .insert({ ...perspective, user_id: user.id })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      set(state => ({ perspectives: [...state.perspectives, data] }))
-      return data
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to create perspective' })
+    if (isApiError(userResult) || !userResult.data.user) {
+      set({ error: { message: 'No authenticated user' } })
       return null
     }
+
+    const result = await api.mutate(
+      () => api.client
+        .from('perspectives')
+        .insert({ ...perspective, user_id: userResult.data.user.id })
+        .select()
+        .single(),
+      { 
+        successMessage: 'Perspective created successfully',
+        errorContext: 'Failed to create perspective' 
+      }
+    )
+
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return null
+    }
+
+    set((state) => ({ perspectives: [...state.perspectives, result.data] }))
+    return result.data
   },
 
   updatePerspective: async (id, update) => {
-    try {
-      const { error } = await supabase
-        .from('perspectives')
-        .update(update)
-        .eq('id', id)
+    set({ error: null })
+    
+    const result = await api.mutate(
+      () => api.client.from('perspectives').update(update).eq('id', id),
+      { 
+        successMessage: 'Perspective updated successfully',
+        errorContext: 'Failed to update perspective' 
+      }
+    )
 
-      if (error) throw error
-
-      set(state => ({
-        perspectives: state.perspectives.map(p => 
-          p.id === id ? { ...p, ...update } : p
-        )
-      }))
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to update perspective' })
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return
     }
+
+    set((state) => ({
+      perspectives: state.perspectives.map((p) => (p.id === id ? { ...p, ...update } : p))
+    }))
   },
 
   deletePerspective: async (id) => {
-    try {
-      const { error } = await supabase
-        .from('perspectives')
-        .delete()
-        .eq('id', id)
+    set({ error: null })
+    
+    const result = await api.mutate(
+      () => api.client.from('perspectives').delete().eq('id', id),
+      { 
+        successMessage: 'Perspective deleted successfully',
+        errorContext: 'Failed to delete perspective' 
+      }
+    )
 
-      if (error) throw error
-
-      set(state => ({
-        perspectives: state.perspectives.filter(p => p.id !== id)
-      }))
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to delete perspective' })
+    if (isApiError(result)) {
+      set({ error: result.error })
+      return
     }
+
+    set((state) => ({
+      perspectives: state.perspectives.filter((p) => p.id !== id)
+    }))
   },
 
   getPerspectiveById: (id) => {
-    return get().perspectives.find(p => p.id === id)
-  }
+    return get().perspectives.find((p) => p.id === id)
+  },
+
+  clearError: () => set({ error: null })
 }))

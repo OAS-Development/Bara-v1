@@ -6,10 +6,11 @@ import { ProjectForm } from '@/components/projects/project-form'
 import { useProjectStore } from '@/stores/project-store'
 import { Plus, FolderPlus } from 'lucide-react'
 import { Database } from '@/types/database.types'
+import { AsyncErrorBoundary } from '@/components/error-boundary'
 
 type Project = Database['public']['Tables']['projects']['Row']
 
-export default function ProjectsPage() {
+function ProjectsPageContent() {
   const [showNewProject, setShowNewProject] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [parentProjectId, setParentProjectId] = useState<string | undefined>()
@@ -69,7 +70,7 @@ export default function ProjectsPage() {
       {selectedProject && (
         <div className="w-80 border-l bg-gray-50 p-6">
           <h2 className="text-lg font-semibold mb-4">{selectedProject.name}</h2>
-          
+
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-600">Type</label>
@@ -88,7 +89,9 @@ export default function ProjectsPage() {
               <label className="text-sm font-medium text-gray-600">Status</label>
               <select
                 value={selectedProject.status}
-                onChange={(e) => updateProject(selectedProject.id, { status: e.target.value as any })}
+                onChange={(e) =>
+                  updateProject(selectedProject.id, { status: e.target.value as any })
+                }
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="active">Active</option>
@@ -98,10 +101,10 @@ export default function ProjectsPage() {
               </select>
             </div>
 
-            {selectedProject.note && (
+            {selectedProject.description && (
               <div>
-                <label className="text-sm font-medium text-gray-600">Notes</label>
-                <p className="mt-1 text-sm text-gray-700">{selectedProject.note}</p>
+                <label className="text-sm font-medium text-gray-600">Description</label>
+                <p className="mt-1 text-sm text-gray-700">{selectedProject.description}</p>
               </div>
             )}
           </div>
@@ -118,5 +121,13 @@ export default function ProjectsPage() {
         />
       )}
     </div>
+  )
+}
+
+export default function ProjectsPage() {
+  return (
+    <AsyncErrorBoundary>
+      <ProjectsPageContent />
+    </AsyncErrorBoundary>
   )
 }

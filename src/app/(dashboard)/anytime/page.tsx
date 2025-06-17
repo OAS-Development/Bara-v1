@@ -1,19 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TaskList } from '@/components/tasks/task-list'
 import { Archive } from 'lucide-react'
+import { AsyncErrorBoundary } from '@/components/error-boundary'
 
-export default function AnytimePage() {
+function AnytimePageContent() {
   const [taskCount, setTaskCount] = useState(0)
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchTaskCount()
-  }, [])
-
-  const fetchTaskCount = async () => {
+  const fetchTaskCount = useCallback(async () => {
     const { count } = await supabase
       .from('tasks')
       .select('id', { count: 'exact', head: true })
@@ -22,7 +19,11 @@ export default function AnytimePage() {
       .or(`defer_date.is.null,defer_date.lte.${new Date().toISOString()}`)
 
     setTaskCount(count || 0)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchTaskCount()
+  }, [fetchTaskCount])
 
   return (
     <div className="flex h-full">
@@ -42,5 +43,13 @@ export default function AnytimePage() {
         <TaskList />
       </div>
     </div>
+  )
+}
+
+export default function AnytimePage() {
+  return (
+    <AsyncErrorBoundary>
+      <AnytimePageContent />
+    </AsyncErrorBoundary>
   )
 }

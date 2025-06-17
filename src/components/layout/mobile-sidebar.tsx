@@ -35,9 +35,9 @@ export function MobileSidebar() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed top-4 left-4 z-50 p-2 rounded-lg bg-gray-900 text-white",
-          "lg:hidden",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500"
+          'fixed top-4 left-4 z-50 p-2 rounded-lg bg-gray-900 text-white',
+          'lg:hidden',
+          'focus:outline-none focus:ring-2 focus:ring-blue-500'
         )}
         aria-label="Toggle menu"
       >

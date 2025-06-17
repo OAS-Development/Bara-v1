@@ -25,7 +25,7 @@ export default function TagsPage() {
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <p className="text-red-500 mb-2">Error loading tags</p>
-          <p className="text-sm text-gray-500">{error}</p>
+          <p className="text-sm text-gray-500">{error.message}</p>
         </div>
       </div>
     )
@@ -36,9 +36,7 @@ export default function TagsPage() {
       <div className="flex-1 flex flex-col">
         <div className="border-b px-6 py-4">
           <h1 className="text-2xl font-semibold">Tags</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Organize your tasks with tags and contexts
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Organize your tasks with tags and contexts</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">

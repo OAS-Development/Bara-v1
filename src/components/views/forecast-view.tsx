@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Database } from '@/types/database.types'
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -19,16 +19,12 @@ export function ForecastView() {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchMonthTasks()
-  }, [currentMonth])
-
-  const fetchMonthTasks = async () => {
+  const fetchMonthTasks = useCallback(async () => {
     setLoading(true)
-    
+
     const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
     const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0)
-    
+
     const { data: tasks, error } = await supabase
       .from('tasks')
       .select('*')
@@ -45,7 +41,7 @@ export function ForecastView() {
 
     // Group tasks by day
     const tasksByDay: Record<string, Task[]> = {}
-    tasks?.forEach(task => {
+    tasks?.forEach((task) => {
       if (task.due_date) {
         const dateKey = new Date(task.due_date).toDateString()
         if (!tasksByDay[dateKey]) {
@@ -68,7 +64,11 @@ export function ForecastView() {
 
     setMonthTasks(daysWithTasks)
     setLoading(false)
-  }
+  }, [supabase, currentMonth])
+
+  useEffect(() => {
+    fetchMonthTasks()
+  }, [fetchMonthTasks])
 
   const goToPreviousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
@@ -78,8 +78,20 @@ export function ForecastView() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
   }
 
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-    'July', 'August', 'September', 'October', 'November', 'December']
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ]
 
   const getFirstDayOfMonth = () => {
     return new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
@@ -98,26 +110,20 @@ export function ForecastView() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold">Forecast</h2>
         <div className="flex items-center gap-4">
-          <button
-            onClick={goToPreviousMonth}
-            className="p-2 hover:bg-gray-800 rounded"
-          >
+          <button onClick={goToPreviousMonth} className="p-2 hover:bg-gray-800 rounded">
             <ChevronLeft className="h-5 w-5" />
           </button>
           <h3 className="text-lg font-medium w-40 text-center">
             {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
           </h3>
-          <button
-            onClick={goToNextMonth}
-            className="p-2 hover:bg-gray-800 rounded"
-          >
+          <button onClick={goToNextMonth} className="p-2 hover:bg-gray-800 rounded">
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
           <div key={day} className="text-center text-sm font-medium text-gray-500 p-2">
             {day}
           </div>
@@ -138,17 +144,14 @@ export function ForecastView() {
             <div
               key={date.toISOString()}
               className={cn(
-                "aspect-square border border-gray-800 rounded-lg p-2 transition-colors",
-                isToday && "border-blue-500 bg-blue-950/20",
-                isWeekend && "bg-gray-900",
-                hasTasks && "hover:bg-gray-800 cursor-pointer"
+                'aspect-square border border-gray-800 rounded-lg p-2 transition-colors',
+                isToday && 'border-blue-500 bg-blue-950/20',
+                isWeekend && 'bg-gray-900',
+                hasTasks && 'hover:bg-gray-800 cursor-pointer'
               )}
             >
               <div className="flex justify-between items-start">
-                <span className={cn(
-                  "text-sm",
-                  isToday && "font-bold text-blue-400"
-                )}>
+                <span className={cn('text-sm', isToday && 'font-bold text-blue-400')}>
                   {date.getDate()}
                 </span>
                 {hasTasks && (
@@ -157,7 +160,7 @@ export function ForecastView() {
                   </span>
                 )}
               </div>
-              
+
               {hasTasks && (
                 <div className="mt-1 space-y-1">
                   {tasks.slice(0, 3).map((task, i) => (
@@ -170,9 +173,7 @@ export function ForecastView() {
                     </div>
                   ))}
                   {tasks.length > 3 && (
-                    <div className="text-xs text-gray-500">
-                      +{tasks.length - 3} more
-                    </div>
+                    <div className="text-xs text-gray-500">+{tasks.length - 3} more</div>
                   )}
                 </div>
               )}

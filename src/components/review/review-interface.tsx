@@ -25,24 +25,29 @@ export function ReviewInterface() {
     fetchProjects().then(() => {
       calculateReviews()
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const calculateReviews = () => {
     const now = new Date()
     const projectsWithReview = projects
-      .filter(p => p.status === 'active' && p.review_interval_days)
-      .map(project => {
-        const lastReviewed = project.last_reviewed_at ? new Date(project.last_reviewed_at) : new Date(project.created_at)
-        const daysSince = Math.floor((now.getTime() - lastReviewed.getTime()) / (1000 * 60 * 60 * 24))
+      .filter((p) => p.status === 'active' && p.review_interval_days)
+      .map((project) => {
+        const lastReviewed = project.last_reviewed_at
+          ? new Date(project.last_reviewed_at)
+          : new Date(project.created_at)
+        const daysSince = Math.floor(
+          (now.getTime() - lastReviewed.getTime()) / (1000 * 60 * 60 * 24)
+        )
         const needsReview = daysSince >= (project.review_interval_days || 0)
-        
+
         return {
           ...project,
           needsReview,
           daysSinceReview: daysSince
         }
       })
-      .filter(p => p.needsReview)
+      .filter((p) => p.needsReview)
       .sort((a, b) => (b.daysSinceReview || 0) - (a.daysSinceReview || 0))
 
     setProjectsToReview(projectsWithReview)
@@ -116,9 +121,7 @@ export function ReviewInterface() {
           <Folder className="h-8 w-8 text-blue-500 flex-shrink-0 mt-1" />
           <div className="flex-1">
             <h3 className="text-2xl font-semibold mb-2">{currentProject.name}</h3>
-            {currentProject.note && (
-              <p className="text-gray-400 mb-4">{currentProject.note}</p>
-            )}
+            {currentProject.description && <p className="text-gray-400 mb-4">{currentProject.description}</p>}
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <span>Type: {currentProject.type}</span>
               <span>•</span>

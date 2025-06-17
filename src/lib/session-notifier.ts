@@ -1,10 +1,10 @@
 // Session Completion Notifier for Node.js/TypeScript projects
 // Add this to your project for completion notifications
 
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { exec } from 'child_process'
+import { promisify } from 'util'
 
-const execAsync = promisify(exec);
+const execAsync = promisify(exec)
 
 export class SessionNotifier {
   // Play system sound
@@ -12,17 +12,17 @@ export class SessionNotifier {
     try {
       if (process.platform === 'darwin') {
         // macOS sounds
-        await execAsync('afplay /System/Library/Sounds/Glass.aiff');
+        await execAsync('afplay /System/Library/Sounds/Glass.aiff')
       } else if (process.platform === 'win32') {
         // Windows beep
-        process.stdout.write('\x07');
+        process.stdout.write('\x07')
       } else {
         // Linux/Unix bell
-        process.stdout.write('\x07');
+        process.stdout.write('\x07')
       }
     } catch (error) {
       // Fallback to terminal bell
-      console.log('\x07');
+      console.log('\x07')
     }
   }
 
@@ -31,16 +31,18 @@ export class SessionNotifier {
     try {
       if (process.platform === 'darwin') {
         // macOS notification
-        await execAsync(`osascript -e 'display notification "${message}" with title "${title}" sound name "Glass"'`);
+        await execAsync(
+          `osascript -e 'display notification "${message}" with title "${title}" sound name "Glass"'`
+        )
       } else if (process.platform === 'win32') {
         // Windows notification (requires node-notifier)
-        console.log(`[NOTIFICATION] ${title}: ${message}`);
+        console.log(`[NOTIFICATION] ${title}: ${message}`)
       } else {
         // Linux notification
-        await execAsync(`notify-send "${title}" "${message}"`);
+        await execAsync(`notify-send "${title}" "${message}"`)
       }
     } catch (error) {
-      console.log(`[NOTIFICATION] ${title}: ${message}`);
+      console.log(`[NOTIFICATION] ${title}: ${message}`)
     }
   }
 
@@ -48,7 +50,7 @@ export class SessionNotifier {
   static async speak(message: string) {
     if (process.platform === 'darwin') {
       try {
-        await execAsync(`say "${message}"`);
+        await execAsync(`say "${message}"`)
       } catch (error) {
         // Silent fail
       }
@@ -57,20 +59,20 @@ export class SessionNotifier {
 
   // Combined notification
   static async notifyComplete(sessionNumber?: number) {
-    const message = sessionNumber 
-      ? `Session ${sessionNumber} complete!` 
-      : 'Claude Code session complete!';
-    
-    console.log('\n🎉 ================================');
-    console.log(`🎉 ${message}`);
-    console.log('🎉 ================================\n');
+    const message = sessionNumber
+      ? `Session ${sessionNumber} complete!`
+      : 'Claude Code session complete!'
+
+    console.log('\n🎉 ================================')
+    console.log(`🎉 ${message}`)
+    console.log('🎉 ================================\n')
 
     // Fire all notifications in parallel
     await Promise.all([
       this.playSound(),
       this.showNotification('Claude Code', message),
       this.speak(message)
-    ]);
+    ])
   }
 }
 
@@ -79,5 +81,5 @@ export class SessionNotifier {
 
 // For use in build scripts
 if (require.main === module) {
-  SessionNotifier.notifyComplete(parseInt(process.argv[2]) || undefined);
+  SessionNotifier.notifyComplete(parseInt(process.argv[2]) || undefined)
 }

@@ -13,14 +13,14 @@ const commands = [
   { id: 'inbox', title: 'Go to Inbox', action: '/inbox' },
   { id: 'today', title: 'Go to Today', action: '/today' },
   { id: 'projects', title: 'Go to Projects', action: '/projects' },
-  { id: 'tags', title: 'Go to Tags', action: '/tags' },
+  { id: 'tags', title: 'Go to Tags', action: '/tags' }
 ]
 
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const [search, setSearch] = useState('')
   const router = useRouter()
-  
-  const filteredCommands = commands.filter(cmd =>
+
+  const filteredCommands = commands.filter((cmd) =>
     cmd.title.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -51,7 +51,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             autoFocus
           />
         </div>
-        
+
         <div className="max-h-96 overflow-y-auto">
           {filteredCommands.map((cmd) => (
             <button

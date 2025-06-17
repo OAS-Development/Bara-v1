@@ -2,7 +2,7 @@ import { TimeRules, TimeOfDay } from './time-rules'
 import { DeviceContext, DeviceDetector } from './device-context'
 import { useLocationStore } from '@/stores/location-store'
 import { useEnergyStore, EnergyLevel } from '@/stores/energy-store'
-import { Task } from '@/types'
+import { TaskWithTags } from '@/types'
 
 export interface ContextScore {
   taskId: string
@@ -38,11 +38,7 @@ export class ContextEngine {
     }
   }
 
-  scoreTaskForContext(task: Task & { 
-    location?: string | null
-    time_of_day?: TimeOfDay | null
-    energy_required?: EnergyLevel | null
-  }, context: CombinedContext): ContextScore {
+  scoreTaskForContext(task: TaskWithTags, context: CombinedContext): ContextScore {
     let score = 50 // Base score
     const reasons: string[] = []
 
@@ -66,7 +62,10 @@ export class ContextEngine {
         score += 25
         reasons.push('Perfect time match')
       } else {
-        const timeCompatibility = this.getTimeCompatibility(task.time_of_day, context.timeOfDay)
+        const timeCompatibility = this.getTimeCompatibility(
+          task.time_of_day as TimeOfDay,
+          context.timeOfDay
+        )
         score += timeCompatibility * 15
         if (timeCompatibility > 0) {
           reasons.push('Acceptable time')
@@ -80,7 +79,7 @@ export class ContextEngine {
     if (task.energy_required) {
       const energyMatch = this.getEnergyMatch(task.energy_required, context.energyLevel)
       score += energyMatch * 25
-      
+
       if (energyMatch === 1) {
         reasons.push('Energy level matches')
       } else if (energyMatch > 0.5) {
@@ -103,7 +102,7 @@ export class ContextEngine {
     }
 
     // Device context adjustments
-    if (context.device.type === 'mobile' && task.notes && task.notes.length > 500) {
+    if (context.device.type === 'mobile' && task.note && task.note.length > 500) {
       score -= 10
       reasons.push('Long task for mobile')
     }
@@ -131,7 +130,7 @@ export class ContextEngine {
       evening: { morning: 0, afternoon: 0.3, evening: 1, night: 0.5 },
       night: { morning: 0, afternoon: 0, evening: 0.3, night: 1 }
     }
-    
+
     return compatibility[preferred][current]
   }
 
@@ -139,18 +138,18 @@ export class ContextEngine {
     const levels = { low: 1, medium: 2, high: 3 }
     const requiredLevel = levels[required]
     const currentLevel = levels[current]
-    
+
     if (currentLevel >= requiredLevel) return 1
     if (currentLevel === requiredLevel - 1) return 0.6
     return 0.2
   }
 
-  sortTasksByContext(tasks: Task[], context: CombinedContext): Task[] {
-    const scores = tasks.map(task => this.scoreTaskForContext(task, context))
-    
+  sortTasksByContext(tasks: TaskWithTags[], context: CombinedContext): TaskWithTags[] {
+    const scores = tasks.map((task) => this.scoreTaskForContext(task, context))
+
     return [...tasks].sort((a, b) => {
-      const scoreA = scores.find(s => s.taskId === a.id)?.score || 0
-      const scoreB = scores.find(s => s.taskId === b.id)?.score || 0
+      const scoreA = scores.find((s) => s.taskId === a.id)?.score || 0
+      const scoreB = scores.find((s) => s.taskId === b.id)?.score || 0
       return scoreB - scoreA
     })
   }
@@ -188,7 +187,7 @@ export class ContextEngine {
   }
 
   // Learn from user behavior
-  recordTaskCompletion(task: Task, context: CombinedContext): void {
+  recordTaskCompletion(task: TaskWithTags, context: CombinedContext): void {
     // This would typically save to a database
     // For now, we'll just log it
     console.log('Task completed in context:', {

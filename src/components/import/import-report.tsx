@@ -18,17 +18,25 @@ export function ImportReport({
   onClose,
   onViewImported
 }: ImportReportProps) {
-  const successRate = result.success 
-    ? Math.round(((result.projectsImported + result.tasksImported + result.tagsImported) / 
-        (result.projectsImported + result.tasksImported + result.tagsImported + result.duplicatesSkipped)) * 100)
+  const successRate = result.success
+    ? Math.round(
+        ((result.projectsImported + result.tasksImported + result.tagsImported) /
+          (result.projectsImported +
+            result.tasksImported +
+            result.tagsImported +
+            result.duplicatesSkipped)) *
+          100
+      )
     : 0
 
   return (
     <div className="space-y-6">
       {/* Summary Card */}
-      <div className={`border rounded-lg p-6 ${
-        result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-      }`}>
+      <div
+        className={`border rounded-lg p-6 ${
+          result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+        }`}
+      >
         <div className="flex items-start gap-4">
           {result.success ? (
             <CheckCircle className="h-8 w-8 text-green-600 mt-1" />
@@ -36,15 +44,15 @@ export function ImportReport({
             <AlertCircle className="h-8 w-8 text-red-600 mt-1" />
           )}
           <div className="flex-1">
-            <h3 className={`text-lg font-semibold ${
-              result.success ? 'text-green-900' : 'text-red-900'
-            }`}>
+            <h3
+              className={`text-lg font-semibold ${
+                result.success ? 'text-green-900' : 'text-red-900'
+              }`}
+            >
               {result.success ? 'Import Completed Successfully!' : 'Import Failed'}
             </h3>
-            <p className={`text-sm mt-1 ${
-              result.success ? 'text-green-700' : 'text-red-700'
-            }`}>
-              {result.success 
+            <p className={`text-sm mt-1 ${result.success ? 'text-green-700' : 'text-red-700'}`}>
+              {result.success
                 ? `Successfully imported ${result.tasksImported + result.projectsImported + result.tagsImported} items in ${(result.duration / 1000).toFixed(1)} seconds`
                 : 'The import process encountered errors and could not complete'}
             </p>
@@ -55,26 +63,10 @@ export function ImportReport({
       {/* Statistics */}
       {result.success && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            label="Projects"
-            value={result.projectsImported}
-            icon="📁"
-          />
-          <StatCard
-            label="Tasks"
-            value={result.tasksImported}
-            icon="✓"
-          />
-          <StatCard
-            label="Tags"
-            value={result.tagsImported}
-            icon="🏷️"
-          />
-          <StatCard
-            label="Duplicates Skipped"
-            value={result.duplicatesSkipped}
-            icon="⚠️"
-          />
+          <StatCard label="Projects" value={result.projectsImported} icon="📁" />
+          <StatCard label="Tasks" value={result.tasksImported} icon="✓" />
+          <StatCard label="Tags" value={result.tagsImported} icon="🏷️" />
+          <StatCard label="Duplicates Skipped" value={result.duplicatesSkipped} icon="⚠️" />
         </div>
       )}
 
@@ -84,11 +76,10 @@ export function ImportReport({
           <div className="flex gap-3">
             <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-yellow-800">
-              <p className="font-semibold">
-                {successRate}% Success Rate
-              </p>
+              <p className="font-semibold">{successRate}% Success Rate</p>
               <p className="mt-1">
-                Some items were skipped as duplicates. This is normal if you&apos;ve imported before or have existing data.
+                Some items were skipped as duplicates. This is normal if you&apos;ve imported before
+                or have existing data.
               </p>
             </div>
           </div>
@@ -104,9 +95,7 @@ export function ImportReport({
               <li key={index}>• {error}</li>
             ))}
             {result.errors.length > 10 && (
-              <li className="text-gray-600">
-                ...and {result.errors.length - 10} more errors
-              </li>
+              <li className="text-gray-600">...and {result.errors.length - 10} more errors</li>
             )}
           </ul>
         </div>
@@ -131,10 +120,7 @@ export function ImportReport({
 
       {/* Actions */}
       <div className="flex justify-end gap-3">
-        <button
-          onClick={onClose}
-          className="px-4 py-2 text-gray-700 hover:text-gray-900"
-        >
+        <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:text-gray-900">
           Close
         </button>
         {result.success && (

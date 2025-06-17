@@ -10,7 +10,11 @@ interface FileUploadProps {
   maxSize?: number // in MB
 }
 
-export function FileUpload({ onFileSelect, accept = '.ofocus-archive', maxSize = 50 }: FileUploadProps) {
+export function FileUpload({
+  onFileSelect,
+  accept = '.ofocus-archive',
+  maxSize = 50
+}: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -27,7 +31,7 @@ export function FileUpload({ onFileSelect, accept = '.ofocus-archive', maxSize =
     setIsDragging(false)
   }, [])
 
-  const validateFile = (file: File): string | null => {
+  const validateFile = useCallback((file: File): string | null => {
     // Check file size
     const maxSizeBytes = maxSize * 1024 * 1024
     if (file.size > maxSizeBytes) {
@@ -35,18 +39,18 @@ export function FileUpload({ onFileSelect, accept = '.ofocus-archive', maxSize =
     }
 
     // Check file extension
-    const validExtensions = accept.split(',').map(ext => ext.trim())
+    const validExtensions = accept.split(',').map((ext) => ext.trim())
     const fileName = file.name.toLowerCase()
-    const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext))
-    
+    const hasValidExtension = validExtensions.some((ext) => fileName.endsWith(ext))
+
     if (!hasValidExtension) {
       return `Please select a file with extension: ${accept}`
     }
 
     return null
-  }
+  }, [accept, maxSize])
 
-  const handleFile = (file: File) => {
+  const handleFile = useCallback((file: File) => {
     const validationError = validateFile(file)
     if (validationError) {
       setError(validationError)
@@ -57,7 +61,7 @@ export function FileUpload({ onFileSelect, accept = '.ofocus-archive', maxSize =
     setError(null)
     setSelectedFile(file)
     onFileSelect(file)
-  }
+  }, [onFileSelect, validateFile])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -68,7 +72,7 @@ export function FileUpload({ onFileSelect, accept = '.ofocus-archive', maxSize =
     if (files.length > 0) {
       handleFile(files[0])
     }
-  }, [])
+  }, [handleFile])
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -89,9 +93,9 @@ export function FileUpload({ onFileSelect, accept = '.ofocus-archive', maxSize =
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          "relative border-2 border-dashed rounded-lg p-8 text-center transition-colors",
-          isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400",
-          selectedFile && "bg-gray-50"
+          'relative border-2 border-dashed rounded-lg p-8 text-center transition-colors',
+          isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400',
+          selectedFile && 'bg-gray-50'
         )}
       >
         <input
@@ -110,10 +114,7 @@ export function FileUpload({ onFileSelect, accept = '.ofocus-archive', maxSize =
                 {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>
-            <button
-              onClick={handleRemoveFile}
-              className="text-sm text-red-600 hover:text-red-700"
-            >
+            <button onClick={handleRemoveFile} className="text-sm text-red-600 hover:text-red-700">
               Remove file
             </button>
           </div>
@@ -121,12 +122,8 @@ export function FileUpload({ onFileSelect, accept = '.ofocus-archive', maxSize =
           <div className="space-y-4">
             <Upload className="h-12 w-12 text-gray-400 mx-auto" />
             <div>
-              <p className="text-lg font-medium text-gray-900">
-                Drop your OmniFocus archive here
-              </p>
-              <p className="text-sm text-gray-500">
-                or click to browse for a file
-              </p>
+              <p className="text-lg font-medium text-gray-900">Drop your OmniFocus archive here</p>
+              <p className="text-sm text-gray-500">or click to browse for a file</p>
             </div>
             <p className="text-xs text-gray-400">
               Accepts {accept} files up to {maxSize}MB

@@ -1,34 +1,34 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { Toaster } from "@/components/ui/toast";
-import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import { Toaster } from '@/components/ui/toast'
+import { ServiceWorkerRegistration } from '@/components/pwa/service-worker-registration'
+import './globals.css'
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Bara - Personal Productivity Suite",
-  description: "Your comprehensive personal productivity companion",
-  manifest: "/manifest.json",
-  themeColor: "#3b82f6",
+  title: 'Bara - Personal Productivity Suite',
+  description: 'Your comprehensive personal productivity companion',
+  manifest: '/manifest.json',
+  themeColor: '#3b82f6',
   viewport: {
-    width: "device-width",
+    width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
     userScalable: false,
-    viewportFit: "cover"
+    viewportFit: 'cover'
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Bara"
+    statusBarStyle: 'black-translucent',
+    title: 'Bara'
   }
-};
+}
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en" className="dark">
@@ -38,5 +38,5 @@ export default function RootLayout({
         <ServiceWorkerRegistration />
       </body>
     </html>
-  );
+  )
 }

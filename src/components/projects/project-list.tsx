@@ -29,11 +29,7 @@ export function ProjectList({ onSelectProject, selectedProjectId }: ProjectListP
   }
 
   if (error) {
-    return (
-      <div className="p-4 text-sm text-red-500">
-        Error: {error}
-      </div>
-    )
+    return <div className="p-4 text-sm text-red-500">Error: {error.message}</div>
   }
 
   if (projectsTree.length === 0) {
@@ -46,7 +42,7 @@ export function ProjectList({ onSelectProject, selectedProjectId }: ProjectListP
 
   return (
     <div className="py-2">
-      {projectsTree.map(project => (
+      {projectsTree.map((project) => (
         <ProjectItem
           key={project.id}
           project={project}

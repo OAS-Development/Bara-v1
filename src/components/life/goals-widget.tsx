@@ -1,29 +1,30 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useGoalsStore } from '@/stores/goals-store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Target, Flag, TrendingUp } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import React from 'react'
+import { useGoalsStore } from '@/stores/goals-store'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
+import { Target, Flag, TrendingUp } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { format } from 'date-fns'
 
 export function GoalsWidget() {
-  const router = useRouter();
-  const { goals, milestones } = useGoalsStore();
-  
-  const activeGoals = goals.filter(g => g.status === 'active');
-  const completedGoals = goals.filter(g => g.status === 'completed');
-  const totalProgress = activeGoals.length > 0 
-    ? activeGoals.reduce((sum, g) => sum + g.progress, 0) / activeGoals.length 
-    : 0;
-  
+  const router = useRouter()
+  const { goals, milestones } = useGoalsStore()
+
+  const activeGoals = goals.filter((g) => g.status === 'active')
+  const completedGoals = goals.filter((g) => g.status === 'completed')
+  const totalProgress =
+    activeGoals.length > 0
+      ? activeGoals.reduce((sum, g) => sum + g.progress, 0) / activeGoals.length
+      : 0
+
   const upcomingMilestones = milestones
-    .filter(m => !m.completed && m.target_date)
+    .filter((m) => !m.completed && m.target_date)
     .sort((a, b) => new Date(a.target_date!).getTime() - new Date(b.target_date!).getTime())
-    .slice(0, 3);
+    .slice(0, 3)
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -33,11 +34,7 @@ export function GoalsWidget() {
             <Target className="w-5 h-5 text-purple-500" />
             Goals & Progress
           </span>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => router.push('/life/goals')}
-          >
+          <Button variant="ghost" size="sm" onClick={() => router.push('/life/goals')}>
             View All →
           </Button>
         </CardTitle>
@@ -61,7 +58,7 @@ export function GoalsWidget() {
         {activeGoals.length > 0 && (
           <div className="space-y-2">
             <p className="text-sm font-medium">Active Goals</p>
-            {activeGoals.slice(0, 2).map(goal => (
+            {activeGoals.slice(0, 2).map((goal) => (
               <div key={goal.id} className="space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm truncate">{goal.title}</span>
@@ -79,8 +76,8 @@ export function GoalsWidget() {
               <Flag className="w-4 h-4" />
               Upcoming Milestones
             </p>
-            {upcomingMilestones.map(milestone => {
-              const goal = goals.find(g => g.id === milestone.goal_id);
+            {upcomingMilestones.map((milestone) => {
+              const goal = goals.find((g) => g.id === milestone.goal_id)
               return (
                 <div key={milestone.id} className="flex items-center justify-between text-sm">
                   <span className="truncate">{milestone.title}</span>
@@ -88,24 +85,24 @@ export function GoalsWidget() {
                     {format(new Date(milestone.target_date!), 'MMM d')}
                   </Badge>
                 </div>
-              );
+              )
             })}
           </div>
         )}
 
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={() => router.push('/life/goals?action=new')}
           >
             <Target className="w-4 h-4 mr-1" />
             New Goal
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={() => router.push('/life/goals')}
           >
@@ -115,5 +112,5 @@ export function GoalsWidget() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

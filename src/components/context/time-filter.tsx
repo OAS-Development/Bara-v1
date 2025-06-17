@@ -28,11 +28,11 @@ export function TimeFilter({ value, onChange }: TimeFilterProps) {
         <Clock className="h-4 w-4" />
         <span>Time of Day Filter</span>
       </div>
-      
+
       <ToggleGroup.Root
         type="single"
         value={value || 'all'}
-        onValueChange={(val) => onChange(val === 'all' ? null : val as TimeOfDay)}
+        onValueChange={(val) => onChange(val === 'all' ? null : (val as TimeOfDay))}
         className="flex items-center gap-2"
       >
         <ToggleGroup.Item
