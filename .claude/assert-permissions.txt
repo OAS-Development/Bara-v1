@@ -1,0 +1,10 @@
+/permissions add *
+/permissions add bash:*
+/permissions add filesystem:*
+/permissions add git:*
+/permissions add npm:*
+/permissions add process:*
+/permissions set autoApprove true
+/settings set requireConfirmation false
+/settings set autoApproveTimeout 0
+/settings set showPermissionPrompts false

@@ -5,7 +5,7 @@ import { FileUpload } from '@/components/import/file-upload'
 import { ImportPreview } from '@/components/import/import-preview'
 import { Download, Info } from 'lucide-react'
 
-type ImportStep = 'upload' | 'preview' | 'importing' | 'complete'
+type ImportStep = 'upload' | 'preview'
 
 export default function ImportPage() {
   const [step, setStep] = useState<ImportStep>('upload')
@@ -17,20 +17,11 @@ export default function ImportPage() {
   }
 
   const handleProceedWithImport = async (parsedData: any) => {
-    setStep('importing')
-    // Note: Actual import logic will be implemented in Session 5
-    // For now, we just show a placeholder
-    setTimeout(() => {
-      setStep('complete')
-    }, 2000)
+    // The ImportPreview component now handles the entire import process
+    // This function is no longer needed but kept for compatibility
   }
 
   const handleCancel = () => {
-    setSelectedFile(null)
-    setStep('upload')
-  }
-
-  const handleReset = () => {
     setSelectedFile(null)
     setStep('upload')
   }
@@ -82,43 +73,6 @@ export default function ImportPage() {
               />
             )}
 
-            {step === 'importing' && (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-6"></div>
-                <h2 className="text-xl font-semibold mb-2">Importing Your Data</h2>
-                <p className="text-gray-600">
-                  This may take a few moments depending on the size of your archive...
-                </p>
-              </div>
-            )}
-
-            {step === 'complete' && (
-              <div className="text-center py-12">
-                <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-semibold mb-2">Import Complete!</h2>
-                <p className="text-gray-600 mb-6">
-                  Your OmniFocus data has been successfully imported.
-                </p>
-                <div className="space-x-4">
-                  <button
-                    onClick={() => window.location.href = '/inbox'}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Go to Inbox
-                  </button>
-                  <button
-                    onClick={handleReset}
-                    className="px-4 py-2 text-gray-700 hover:text-gray-900"
-                  >
-                    Import Another File
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

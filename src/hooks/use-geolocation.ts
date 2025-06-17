@@ -1,144 +1,100 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useLocationStore } from '@/stores/location-store'
 
-interface GeolocationOptions {
+export interface UseGeolocationOptions {
   enableHighAccuracy?: boolean
   timeout?: number
   maximumAge?: number
-  updateInterval?: number
+  watchPosition?: boolean
 }
 
-interface GeolocationState {
-  position: GeolocationPosition | null
-  error: GeolocationPositionError | null
-  loading: boolean
-  permission: PermissionState | null
-}
+export function useGeolocation(options: UseGeolocationOptions = {}) {
+  const {
+    enableHighAccuracy = true,
+    timeout = 5000,
+    maximumAge = 0,
+    watchPosition = true
+  } = options
 
-const DEFAULT_OPTIONS: GeolocationOptions = {
-  enableHighAccuracy: true,
-  timeout: 10000,
-  maximumAge: 30000,
-  updateInterval: 60000 // Update every minute
-}
+  const {
+    currentLocation,
+    locationError,
+    watchId,
+    setCurrentLocation,
+    setLocationError,
+    setWatchId
+  } = useLocationStore()
 
-export function useGeolocation(options: GeolocationOptions = {}) {
-  const [state, setState] = useState<GeolocationState>({
-    position: null,
-    error: null,
-    loading: true,
-    permission: null
-  })
-
-  const { setCurrentLocation, setLocationPermission } = useLocationStore()
-  const mergedOptions = { ...DEFAULT_OPTIONS, ...options }
-
-  // Check permission status
-  const checkPermission = useCallback(async () => {
-    if ('permissions' in navigator) {
-      try {
-        const result = await navigator.permissions.query({ name: 'geolocation' })
-        setState(prev => ({ ...prev, permission: result.state }))
-        setLocationPermission(result.state)
-        
-        // Listen for permission changes
-        result.addEventListener('change', () => {
-          setState(prev => ({ ...prev, permission: result.state }))
-          setLocationPermission(result.state)
-        })
-      } catch (error) {
-        console.error('Permission check failed:', error)
-      }
-    }
-  }, [setLocationPermission])
-
-  // Get current position
-  const getCurrentPosition = useCallback(() => {
-    setState(prev => ({ ...prev, loading: true }))
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setState({
-          position,
-          error: null,
-          loading: false,
-          permission: 'granted'
-        })
-        setCurrentLocation(position)
-      },
-      (error) => {
-        setState(prev => ({
-          ...prev,
-          error,
-          loading: false,
-          permission: error.code === 1 ? 'denied' : prev.permission
-        }))
-        setCurrentLocation(null)
-      },
-      {
-        enableHighAccuracy: mergedOptions.enableHighAccuracy,
-        timeout: mergedOptions.timeout,
-        maximumAge: mergedOptions.maximumAge
-      }
-    )
-  }, [mergedOptions, setCurrentLocation])
-
-  // Request permission and start tracking
-  const requestPermission = useCallback(async () => {
-    try {
-      getCurrentPosition()
-    } catch (error) {
-      console.error('Failed to get position:', error)
-    }
-  }, [getCurrentPosition])
-
-  // Stop tracking
-  const stopTracking = useCallback(() => {
-    setState(prev => ({ ...prev, loading: false }))
-    setCurrentLocation(null)
+  const handleSuccess = useCallback((position: GeolocationPosition) => {
+    setCurrentLocation(position)
   }, [setCurrentLocation])
 
-  useEffect(() => {
+  const handleError = useCallback((error: GeolocationPositionError) => {
+    const errorMessages: Record<number, string> = {
+      1: 'Location permission denied',
+      2: 'Position unavailable',
+      3: 'Request timeout'
+    }
+    setLocationError(errorMessages[error.code] || 'Unknown error')
+  }, [setLocationError])
+
+  const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setState({
-        position: null,
-        error: {
-          code: 0,
-          message: 'Geolocation is not supported',
-          PERMISSION_DENIED: 1,
-          POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3
-        } as GeolocationPositionError,
-        loading: false,
-        permission: null
-      })
+      setLocationError('Geolocation is not supported by your browser')
       return
     }
 
-    checkPermission()
-
-    // Auto-start if permission is already granted
-    if (state.permission === 'granted') {
-      getCurrentPosition()
+    const geoOptions: PositionOptions = {
+      enableHighAccuracy,
+      timeout,
+      maximumAge
     }
 
-    // Set up periodic updates if tracking is active
-    let intervalId: NodeJS.Timeout | null = null
-    if (state.permission === 'granted' && mergedOptions.updateInterval) {
-      intervalId = setInterval(getCurrentPosition, mergedOptions.updateInterval)
+    if (watchPosition) {
+      const id = navigator.geolocation.watchPosition(
+        handleSuccess,
+        handleError,
+        geoOptions
+      )
+      setWatchId(id)
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        handleSuccess,
+        handleError,
+        geoOptions
+      )
     }
+  }, [
+    enableHighAccuracy,
+    timeout,
+    maximumAge,
+    watchPosition,
+    handleSuccess,
+    handleError,
+    setWatchId
+  ])
 
+  const stopWatching = useCallback(() => {
+    if (watchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchId)
+      setWatchId(null)
+    }
+  }, [watchId, setWatchId])
+
+  useEffect(() => {
     return () => {
-      if (intervalId) clearInterval(intervalId)
+      // Clean up on unmount
+      stopWatching()
     }
-  }, [state.permission, mergedOptions.updateInterval, checkPermission, getCurrentPosition])
+  }, [stopWatching])
 
   return {
-    ...state,
-    requestPermission,
-    stopTracking,
-    refresh: getCurrentPosition
+    currentLocation,
+    locationError,
+    isWatching: watchId !== null,
+    requestLocation,
+    stopWatching
   }
 }

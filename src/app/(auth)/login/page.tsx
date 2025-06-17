@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -26,6 +25,17 @@ export default function LoginPage() {
     if (error) {
       setError(error.message)
       setLoading(false)
+      
+      // Track failed login attempt
+      try {
+        await fetch('/api/auth/track-failed-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        })
+      } catch (trackError) {
+        console.error('Failed to track login attempt:', trackError)
+      }
     } else {
       router.push('/inbox')
       router.refresh()
@@ -37,13 +47,10 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Private System
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-              create a new account
-            </Link>
+            Authorized Access Only
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>

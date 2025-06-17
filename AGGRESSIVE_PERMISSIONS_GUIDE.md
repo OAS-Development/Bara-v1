@@ -4,8 +4,8 @@
 
 ### Option 1: Use the Aggressive Launch Script
 ```bash
-chmod +x claude-code-aggressive.sh
-./claude-code-aggressive.sh
+chmod +x claude-aggressive.sh
+./claude-aggressive.sh
 ```
 
 ### Option 2: Manual Launch with All Permissions
@@ -14,7 +14,7 @@ chmod +x claude-code-aggressive.sh
 rm .claude/settings.local.json 2>/dev/null
 
 # Launch with full permissions
-claude-code --allowedTools "*" --autoApprove true
+claude --dangerously-skip-permissions --allowedTools "*" --autoApprove true
 ```
 
 ### Option 3: Set Global Permissions (Nuclear Option)

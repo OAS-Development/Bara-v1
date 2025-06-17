@@ -6,7 +6,7 @@ echo "============================================"
 
 # Step 1: Kill any running instances
 echo "1. Killing any running Claude Code instances..."
-pkill -f claude-code 2>/dev/null
+pkill -f claude 2>/dev/null
 sleep 1
 
 # Step 2: Complete cleanup
@@ -96,17 +96,28 @@ echo "Then paste your session prompt with this prefix:"
 echo "AUTONOMOUS MODE: Full permissions granted. Execute without confirmations."
 echo ""
 
-# Launch with every possible permission flag
-claude-code \
-  --allowedTools "*" \
-  --autoApprove true \
-  --skipConfirmations true \
-  --trustLevel maximum \
-  --no-sandbox \
-  --disable-permissions-check \
-  --force-approve \
-  --yes-to-all \
-  2>/dev/null || claude-code --allowedTools "*" --autoApprove true
+# Try to launch Claude Code with various possible commands
+echo "Attempting to launch Claude Code..."
+
+if command -v claude &> /dev/null; then
+    claude --dangerously-skip-permissions --allowedTools "*" --autoApprove true
+elif command -v claude-code &> /dev/null; then
+    claude-code --dangerously-skip-permissions --allowedTools "*" --autoApprove true
+elif [ -d "/Applications/Claude Code.app" ]; then
+    open "/Applications/Claude Code.app"
+elif [ -d "/Applications/Claude.app" ]; then
+    open "/Applications/Claude.app"
+else
+    echo ""
+    echo "⚠️  Could not auto-launch Claude Code!"
+    echo ""
+    echo "Please launch Claude Code manually using one of these methods:"
+    echo "  1. Click the Claude Code icon in your Applications folder"
+    echo "  2. Use Spotlight: Press Cmd+Space and type 'Claude'"
+    echo "  3. From terminal: claude"
+    echo ""
+    echo "Once Claude Code is open, immediately run the commands shown above."
+fi
 
 echo ""
 echo "✅ Maximum permission setup complete!"

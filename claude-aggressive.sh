@@ -17,5 +17,6 @@ echo "All actions will be auto-approved. No confirmations required."
 echo ""
 
 claude \
+  --dangerously-skip-permissions \
   --allowedTools "*" \
   "$@"

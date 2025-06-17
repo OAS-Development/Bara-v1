@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { LocationFilter } from '@/components/location/location-filter'
 import { TimeFilter } from './time-filter'
 import { EnergyLevel } from '@/stores/energy-store'
-import { TimeOfDay } from '@/lib/context/time-rules'
 import { Filter, Battery } from 'lucide-react'
 import * as Collapsible from '@radix-ui/react-collapsible'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
@@ -12,7 +11,7 @@ import * as ToggleGroup from '@radix-ui/react-toggle-group'
 interface ContextFilterProps {
   onFilterChange: (filters: {
     location: string | null
-    timeOfDay: TimeOfDay | null
+    timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night' | null
     energyRequired: EnergyLevel | null
   }) => void
 }
@@ -20,7 +19,7 @@ interface ContextFilterProps {
 export function ContextFilter({ onFilterChange }: ContextFilterProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [location, setLocation] = useState<string | null>(null)
-  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay | null>(null)
+  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night' | null>(null)
   const [energyRequired, setEnergyRequired] = useState<EnergyLevel | null>(null)
 
   const handleLocationChange = (newLocation: string | null) => {
@@ -28,7 +27,7 @@ export function ContextFilter({ onFilterChange }: ContextFilterProps) {
     onFilterChange({ location: newLocation, timeOfDay, energyRequired })
   }
 
-  const handleTimeChange = (newTime: TimeOfDay | null) => {
+  const handleTimeChange = (newTime: 'morning' | 'afternoon' | 'evening' | 'night' | null) => {
     setTimeOfDay(newTime)
     onFilterChange({ location, timeOfDay: newTime, energyRequired })
   }

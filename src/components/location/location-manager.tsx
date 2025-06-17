@@ -2,238 +2,267 @@
 
 import { useState } from 'react'
 import { useLocationStore, Location } from '@/stores/location-store'
-import { MapPin, Plus, Edit2, Trash2, Navigation } from 'lucide-react'
-import * as Dialog from '@radix-ui/react-dialog'
+import { useGeolocation } from '@/hooks/use-geolocation'
+import { MapPin, Plus, Settings, Navigation, AlertCircle } from 'lucide-react'
 
 export function LocationManager() {
-  const { locations, addLocation, updateLocation, deleteLocation, nearbyLocationId } = useLocationStore()
-  const [editingLocation, setEditingLocation] = useState<Location | null>(null)
-  const [isAddingNew, setIsAddingNew] = useState(false)
+  const {
+    locations,
+    currentLocation,
+    addLocation,
+    updateLocation,
+    deleteLocation,
+    isAtLocation
+  } = useLocationStore()
 
-  const handleSave = (formData: FormData) => {
-    const name = formData.get('name') as string
-    const latitude = parseFloat(formData.get('latitude') as string)
-    const longitude = parseFloat(formData.get('longitude') as string)
-    const radius = parseInt(formData.get('radius') as string)
-    const color = formData.get('color') as string
-    const icon = formData.get('icon') as string
+  const {
+    locationError,
+    isWatching,
+    requestLocation,
+    stopWatching
+  } = useGeolocation()
 
-    if (editingLocation) {
-      updateLocation(editingLocation.id, {
-        name,
-        latitude,
-        longitude,
-        radius,
-        color,
-        icon
-      })
-      setEditingLocation(null)
-    } else {
-      addLocation({
-        name,
-        latitude,
-        longitude,
-        radius,
-        color,
-        icon
-      })
-      setIsAddingNew(false)
-    }
+  const [isAdding, setIsAdding] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [formData, setFormData] = useState<Partial<Location>>({
+    name: '',
+    radius: 100
+  })
+
+  const handleStartTracking = () => {
+    requestLocation()
   }
 
-  const LocationDialog = ({ location, onClose }: { location?: Location; onClose: () => void }) => (
-    <Dialog.Root open={true} onOpenChange={onClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/30" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-full max-w-md">
-          <Dialog.Title className="text-lg font-semibold mb-4">
-            {location ? 'Edit Location' : 'Add New Location'}
-          </Dialog.Title>
+  const handleStopTracking = () => {
+    stopWatching()
+  }
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleSave(new FormData(e.currentTarget))
-            }}
-            className="space-y-4"
-          >
+  const handleAddLocation = () => {
+    if (!currentLocation) {
+      alert('Please enable location tracking first')
+      return
+    }
+
+    setFormData({
+      name: '',
+      latitude: currentLocation.coords.latitude,
+      longitude: currentLocation.coords.longitude,
+      radius: 100,
+      icon: '📍',
+      color: '#6366f1'
+    })
+    setIsAdding(true)
+  }
+
+  const handleSaveLocation = () => {
+    if (!formData.name || !formData.latitude || !formData.longitude) return
+
+    if (editingId) {
+      updateLocation(editingId, formData)
+      setEditingId(null)
+    } else {
+      addLocation(formData as Omit<Location, 'id'>)
+    }
+
+    setFormData({ name: '', radius: 100 })
+    setIsAdding(false)
+  }
+
+  const handleEditLocation = (location: Location) => {
+    setFormData(location)
+    setEditingId(location.id)
+    setIsAdding(true)
+  }
+
+  const handleCancel = () => {
+    setFormData({ name: '', radius: 100 })
+    setIsAdding(false)
+    setEditingId(null)
+  }
+
+  const formatCoordinates = (lat: number, lon: number) => {
+    return `${lat.toFixed(6)}, ${lon.toFixed(6)}`
+  }
+
+  return (
+    <div className="bg-white rounded-lg border p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold">Location Management</h3>
+        <div className="flex items-center gap-2">
+          {!isWatching ? (
+            <button
+              onClick={handleStartTracking}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Navigation className="h-4 w-4" />
+              Enable Tracking
+            </button>
+          ) : (
+            <button
+              onClick={handleStopTracking}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              <Navigation className="h-4 w-4" />
+              Stop Tracking
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Current Location Status */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-start gap-3">
+          <Navigation className={`h-5 w-5 mt-0.5 ${
+            isWatching ? 'text-green-600 animate-pulse' : 'text-gray-400'
+          }`} />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-700">
+              {isWatching ? 'Location Tracking Active' : 'Location Tracking Disabled'}
+            </p>
+            {currentLocation && (
+              <p className="text-xs text-gray-500 mt-1">
+                Current: {formatCoordinates(
+                  currentLocation.coords.latitude,
+                  currentLocation.coords.longitude
+                )}
+              </p>
+            )}
+            {locationError && (
+              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {locationError}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Location List */}
+      <div className="space-y-3">
+        {locations.map((location) => {
+          const atLocation = isAtLocation(location.id)
+          return (
+            <div
+              key={location.id}
+              className={`p-4 border rounded-lg ${
+                atLocation ? 'border-green-300 bg-green-50' : 'border-gray-200'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{location.icon || '📍'}</span>
+                  <div>
+                    <h4 className="font-medium text-gray-900">
+                      {location.name}
+                      {atLocation && (
+                        <span className="ml-2 text-xs text-green-600 font-normal">
+                          (You are here)
+                        </span>
+                      )}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatCoordinates(location.latitude, location.longitude)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Radius: {location.radius}m
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleEditLocation(location)}
+                    className="p-1 text-gray-400 hover:text-gray-600"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => deleteLocation(location.id)}
+                    className="p-1 text-red-400 hover:text-red-600"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Add/Edit Form */}
+      {isAdding && (
+        <div className="mt-4 p-4 border border-blue-200 bg-blue-50 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-3">
+            {editingId ? 'Edit Location' : 'Add New Location'}
+          </h4>
+          <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Name
               </label>
               <input
-                name="name"
                 type="text"
-                defaultValue={location?.name}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.name || ''}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                placeholder="e.g., Home, Office, Gym"
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Latitude
+                  Icon
                 </label>
                 <input
-                  name="latitude"
-                  type="number"
-                  step="any"
-                  defaultValue={location?.latitude || 0}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Longitude
-                </label>
-                <input
-                  name="longitude"
-                  type="number"
-                  step="any"
-                  defaultValue={location?.longitude || 0}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Radius (meters)
-              </label>
-              <input
-                name="radius"
-                type="number"
-                defaultValue={location?.radius || 100}
-                min="10"
-                max="5000"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Color
-                </label>
-                <input
-                  name="color"
-                  type="color"
-                  defaultValue={location?.color || '#3B82F6'}
-                  required
-                  className="w-full h-10 rounded cursor-pointer"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Icon (emoji)
-                </label>
-                <input
-                  name="icon"
                   type="text"
-                  defaultValue={location?.icon || '📍'}
+                  value={formData.icon || '📍'}
+                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-center"
                   maxLength={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Radius (meters)
+                </label>
+                <input
+                  type="number"
+                  value={formData.radius || 100}
+                  onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  min="10"
+                  max="1000"
                 />
               </div>
             </div>
-
-            <div className="flex gap-3 mt-6">
+            <div className="flex justify-end gap-2 mt-4">
               <button
-                type="submit"
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                onClick={handleCancel}
+                className="px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900"
               >
                 Cancel
               </button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  )
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <MapPin className="h-5 w-5" />
-          Locations
-        </h2>
-        <button
-          onClick={() => setIsAddingNew(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-        >
-          <Plus className="h-4 w-4" />
-          Add Location
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        {locations.map((location) => (
-          <div
-            key={location.id}
-            className={`flex items-center justify-between p-3 bg-white rounded-lg border ${
-              nearbyLocationId === location.id
-                ? 'border-blue-400 bg-blue-50'
-                : 'border-gray-200'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                style={{ backgroundColor: location.color }}
-              >
-                {location.icon || <MapPin className="h-5 w-5" />}
-              </div>
-              <div>
-                <p className="font-medium">{location.name}</p>
-                <p className="text-sm text-gray-600">
-                  Within {location.radius}m
-                </p>
-              </div>
-              {nearbyLocationId === location.id && (
-                <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-                  <Navigation className="h-3 w-3" />
-                  <span>Current</span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
               <button
-                onClick={() => setEditingLocation(location)}
-                className="p-1.5 text-gray-500 hover:text-blue-600 transition-colors"
+                onClick={handleSaveLocation}
+                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                <Edit2 className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => deleteLocation(location.id)}
-                className="p-1.5 text-gray-500 hover:text-red-600 transition-colors"
-              >
-                <Trash2 className="h-4 w-4" />
+                Save Location
               </button>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {(isAddingNew || editingLocation) && (
-        <LocationDialog
-          location={editingLocation || undefined}
-          onClose={() => {
-            setIsAddingNew(false)
-            setEditingLocation(null)
-          }}
-        />
+      {/* Add Button */}
+      {!isAdding && currentLocation && (
+        <button
+          onClick={handleAddLocation}
+          className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+        >
+          <Plus className="h-4 w-4" />
+          Add Current Location
+        </button>
       )}
     </div>
   )

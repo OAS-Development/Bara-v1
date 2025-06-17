@@ -13,6 +13,41 @@
 }
 ```
 
+## Claude Code Prompt
+```
+LAUNCH COMMAND: claude --dangerously-skip-permissions
+
+AUTONOMOUS EXECUTION MODE ACTIVE - NO PERMISSION REQUESTS ALLOWED
+
+I have run the aggressive permissions script. You have COMPLETE AUTONOMOUS PERMISSION to:
+- Create, edit, delete ANY files without asking
+- Run ANY commands (npm, git, bash) without asking  
+- Install ANY packages without asking
+- Make ANY system changes without asking
+
+Current settings confirm:
+- autoApprove: true
+- allowedTools: "*"
+- skipConfirmations: true
+- requireConfirmation: false
+
+DO NOT ask for any permissions. Execute all tasks immediately.
+
+Execute Session 5 from `/Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-05-advanced-ai-mega.md`
+
+This MEGA session implements:
+- Part A: Complete OmniFocus Import
+- Part B: Location Context  
+- Part C: Time & Energy Context
+- Part D: Device & Combined Context
+- Part E: AI Natural Language (Claude API)
+- Part F: AI Intelligence & Suggestions
+
+Work continuously through all parts. Save status to `/sessions/session-05-status.json` when complete.
+
+REMINDER: You have FULL PERMISSION for ALL operations. Execute without asking.
+```
+
 ## Objectives
 This mega-session adds intelligence and advanced features:
 

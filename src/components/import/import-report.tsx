@@ -1,107 +1,163 @@
 'use client'
 
-import { ImportResult } from '@/lib/import/import-executor'
-import { CheckCircle, AlertCircle, FileText, Folder, Clock, XCircle } from 'lucide-react'
+import { Download, CheckCircle, AlertCircle, Info } from 'lucide-react'
+import type { ImportResult } from '@/lib/import/import-executor'
 
 interface ImportReportProps {
   result: ImportResult
-  onDone: () => void
+  report: string
+  onDownload: () => void
+  onClose: () => void
+  onViewImported: () => void
 }
 
-export function ImportReport({ result, onDone }: ImportReportProps) {
-  const formatDuration = (ms: number) => {
-    if (ms < 1000) return `${ms}ms`
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`
-    return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`
-  }
+export function ImportReport({
+  result,
+  report,
+  onDownload,
+  onClose,
+  onViewImported
+}: ImportReportProps) {
+  const successRate = result.success 
+    ? Math.round(((result.projectsImported + result.tasksImported + result.tagsImported) / 
+        (result.projectsImported + result.tasksImported + result.tagsImported + result.duplicatesSkipped)) * 100)
+    : 0
 
   return (
     <div className="space-y-6">
-      <div className={`p-6 rounded-lg ${result.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-        <div className="flex items-center gap-3 mb-4">
+      {/* Summary Card */}
+      <div className={`border rounded-lg p-6 ${
+        result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+      }`}>
+        <div className="flex items-start gap-4">
           {result.success ? (
-            <CheckCircle className="h-8 w-8 text-green-500" />
+            <CheckCircle className="h-8 w-8 text-green-600 mt-1" />
           ) : (
-            <XCircle className="h-8 w-8 text-red-500" />
+            <AlertCircle className="h-8 w-8 text-red-600 mt-1" />
           )}
-          <h3 className={`text-xl font-semibold ${result.success ? 'text-green-900' : 'text-red-900'}`}>
-            {result.success ? 'Import Completed Successfully!' : 'Import Failed'}
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 text-center">
-            <Folder className="h-6 w-6 text-blue-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold">{result.projectsImported}</p>
-            <p className="text-sm text-gray-600">Projects Imported</p>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 text-center">
-            <FileText className="h-6 w-6 text-green-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold">{result.tasksImported}</p>
-            <p className="text-sm text-gray-600">Tasks Imported</p>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 text-center">
-            <AlertCircle className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold">{result.duplicatesSkipped}</p>
-            <p className="text-sm text-gray-600">Duplicates Skipped</p>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 text-center">
-            <Clock className="h-6 w-6 text-purple-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold">{formatDuration(result.duration)}</p>
-            <p className="text-sm text-gray-600">Duration</p>
+          <div className="flex-1">
+            <h3 className={`text-lg font-semibold ${
+              result.success ? 'text-green-900' : 'text-red-900'
+            }`}>
+              {result.success ? 'Import Completed Successfully!' : 'Import Failed'}
+            </h3>
+            <p className={`text-sm mt-1 ${
+              result.success ? 'text-green-700' : 'text-red-700'
+            }`}>
+              {result.success 
+                ? `Successfully imported ${result.tasksImported + result.projectsImported + result.tagsImported} items in ${(result.duration / 1000).toFixed(1)} seconds`
+                : 'The import process encountered errors and could not complete'}
+            </p>
           </div>
         </div>
       </div>
 
-      {result.errors.length > 0 && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <h4 className="font-medium text-red-900 mb-3 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            Import Errors ({result.errors.length})
-          </h4>
-          <div className="max-h-48 overflow-y-auto space-y-2">
-            {result.errors.map((error, index) => (
-              <div key={index} className="text-sm text-red-700 p-2 bg-red-100 rounded">
-                {error}
-              </div>
-            ))}
+      {/* Statistics */}
+      {result.success && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard
+            label="Projects"
+            value={result.projectsImported}
+            icon="📁"
+          />
+          <StatCard
+            label="Tasks"
+            value={result.tasksImported}
+            icon="✓"
+          />
+          <StatCard
+            label="Tags"
+            value={result.tagsImported}
+            icon="🏷️"
+          />
+          <StatCard
+            label="Duplicates Skipped"
+            value={result.duplicatesSkipped}
+            icon="⚠️"
+          />
+        </div>
+      )}
+
+      {/* Success Rate */}
+      {result.success && successRate < 100 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex gap-3">
+            <Info className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-yellow-800">
+              <p className="font-semibold">
+                {successRate}% Success Rate
+              </p>
+              <p className="mt-1">
+                Some items were skipped as duplicates. This is normal if you&apos;ve imported before or have existing data.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-medium text-blue-900 mb-2">Next Steps</h4>
-        <ul className="space-y-2 text-sm text-blue-800">
-          <li className="flex items-start gap-2">
-            <span>•</span>
-            <span>Review your imported projects and tasks in the main view</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span>•</span>
-            <span>Set up your preferred tags and contexts</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span>•</span>
-            <span>Configure review schedules for imported projects</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span>•</span>
-            <span>All imported items are tagged with &ldquo;omnifocus-import&rdquo; for easy filtering</span>
-          </li>
-        </ul>
+      {/* Errors */}
+      {result.errors.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-red-800 mb-2">Import Errors</h4>
+          <ul className="text-xs text-red-700 space-y-1">
+            {result.errors.slice(0, 10).map((error, index) => (
+              <li key={index}>• {error}</li>
+            ))}
+            {result.errors.length > 10 && (
+              <li className="text-gray-600">
+                ...and {result.errors.length - 10} more errors
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+
+      {/* Report Preview */}
+      <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold text-gray-700">Import Report</h4>
+          <button
+            onClick={onDownload}
+            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+          >
+            <Download className="h-4 w-4" />
+            Download Report
+          </button>
+        </div>
+        <pre className="text-xs text-gray-600 overflow-x-auto max-h-48 overflow-y-auto">
+          {report}
+        </pre>
       </div>
 
-      <div className="flex justify-end">
+      {/* Actions */}
+      <div className="flex justify-end gap-3">
         <button
-          onClick={onDone}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          onClick={onClose}
+          className="px-4 py-2 text-gray-700 hover:text-gray-900"
         >
-          Done
+          Close
         </button>
+        {result.success && (
+          <button
+            onClick={onViewImported}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            View Imported Items
+          </button>
+        )}
       </div>
+    </div>
+  )
+}
+
+function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
+  return (
+    <div className="bg-white border rounded-lg p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-2xl">{icon}</span>
+        <span className="text-2xl font-bold text-gray-900">{value}</span>
+      </div>
+      <p className="text-sm text-gray-600">{label}</p>
     </div>
   )
 }

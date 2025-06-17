@@ -23,6 +23,10 @@ This project uses a two-actor development model with Session-based implementatio
 - Strategic planning
 - Documentation
 - Post-Session integration
+- **CRITICAL**: Context analysis before each session
+- **CRITICAL**: Always provide complete Claude Code prompts
+- **CRITICAL**: Include project path at top of every prompt
+- **CRITICAL**: Include push notification setup in all sessions
 
 #### Claude Code (Implementation)
 - Executes Session definitions
@@ -34,15 +38,24 @@ This project uses a two-actor development model with Session-based implementatio
 
 ```mermaid
 graph LR
-    A[Claude Desktop: Plan Session] --> B[Create Session Document]
-    B --> C[Claude Code: Execute Session]
-    C --> D[Claude Code: Run Verification Steps]
-    D --> E[Claude Code: Push to GitHub]
-    E --> F[Claude Code: Report Status]
-    F --> G[Claude Desktop: Plan Next Session]
+    A[Read Previous Session Status] --> B[Analyze Context Usage]
+    B --> C[Claude Desktop: Plan Session]
+    C --> D[Create Session Document]
+    D --> E[Provide Complete Claude Code Prompt]
+    E --> F[Claude Code: Execute Session]
+    F --> G[Claude Code: Run Verification Steps]
+    G --> H[Claude Code: Send Push Notification]
+    H --> I[Claude Code: Push to GitHub]
+    I --> J[Claude Code: Report Status]
+    J --> K[Claude Desktop: Plan Next Session]
 ```
 
-**Note**: Verification is now included as part of the session execution steps, not a separate process.
+**CRITICAL REQUIREMENTS**:
+1. **Context Analysis**: Always read previous session status before planning
+2. **Complete Prompts**: Always provide full Claude Code prompt for copy/paste
+3. **Project Path**: Always include cd command at top of prompt
+4. **Push Notifications**: Every session ends with notification to user
+5. **Verification**: Integrated into session execution steps
 
 ### 4. Session Document Structure
 
@@ -70,10 +83,11 @@ Verification is no longer a separate step - it's integrated into the implementat
 ### 6. Session Boundaries
 
 Sessions end when:
-- 45 minutes have elapsed
+- Target time has elapsed (adjusted based on previous context usage)
 - Objectives are complete
 - Context window is near capacity
 - A natural breakpoint is reached
+- **IMPORTANT**: Session scope must be pre-adjusted based on previous context analysis
 
 ### 7. Communication Protocol
 
@@ -116,6 +130,44 @@ Sessions end when:
 - 🔲 Session 4: Projects & Tags System
 - ... (18 total double sessions)
 
+## CRITICAL GLOBAL REQUIREMENTS (ALL SESSIONS)
+
+### 1. MANDATORY Context Analysis Process
+**Before planning ANY session**, Claude Desktop MUST:
+```bash
+# 1. Read previous session status
+read_file("/sessions/session-[N-1]-status.json")
+
+# 2. Analyze context usage:
+- Previous context used: X%
+- Auto-compact triggered: yes/no
+- Recommendation: optimal/too large/too small
+
+# 3. Adjust upcoming session scope:
+- If previous >60% context: REDUCE scope by 20%
+- If previous 40-60% context: MAINTAIN scope (optimal)
+- If previous <40% context: INCREASE scope by 10%
+- If auto-compact triggered: REDUCE scope by 30%
+```
+
+### 2. MANDATORY Complete Claude Code Prompts
+**Every session planning MUST include**:
+- ✅ Project path at the very top of prompt
+- ✅ Complete prompt text for copy/paste
+- ❌ NEVER reference external scripts like `./launch-session.sh`
+- ❌ NEVER say "use the standard prompt"
+- ✅ Full autonomous permission statement
+- ✅ All implementation steps detailed
+- ✅ Context tracking requirements
+- ✅ Push notification command
+
+### 3. MANDATORY Push Notification Setup
+**Every session completion MUST include**:
+```bash
+# Command that Claude Code executes at session end:
+../../claude-notify.sh '[PROJECT] Session [N]: [TITLE] Complete' [N]
+```
+
 ## Important Notes
 
 1. **Context Preservation**: Each Session document preserves context for the next
@@ -123,25 +175,39 @@ Sessions end when:
 3. **Integrated Verification**: Every Session includes verification steps as part of implementation
 4. **Clean Handoffs**: Status reports ensure smooth transitions between actors
 5. **Git Integration**: Each Session ends with committing and pushing to GitHub
+6. **CRITICAL**: All three global requirements above apply to EVERY session in EVERY project
 
-## Getting Started with Claude Code
+## UPDATED Session Planning Checklist
 
-1. Open `/sessions/session-XX-description.md`
-2. Use the standard prompt with permissions:
-   ```
-   For this session, you have permission to:
-   - Create all files and directories
-   - Run all npm/npx commands
-   - Install all packages
-   - Modify any files in the project
-   - Execute git commands
-   - Run the development server
-   
-   Please proceed with Session X without asking for individual approvals.
-   ```
-3. Execute all implementation steps
-4. Run verification commands
-5. Report completion status
-6. Claude Desktop will provide next Session
+### Before Planning ANY Session (Claude Desktop):
+- [ ] Read previous session status JSON file
+- [ ] Analyze context usage and auto-compact status
+- [ ] Adjust session scope based on context analysis
+- [ ] Create session document with appropriate scope
+- [ ] Include project path cd command at top of prompt
+- [ ] Include push notification command in completion steps
 
-This model ensures efficient development within Claude's constraints while maintaining high code quality and clear communication between planning and implementation phases.
+### Session Execution (Claude Code):
+- [ ] Execute all implementation steps
+- [ ] Run verification commands
+- [ ] Send push notification on completion
+- [ ] Commit and push to GitHub
+- [ ] Report completion status with context metrics
+
+### Global Template for Claude Code Prompts:
+```
+cd /Volumes/DevDrive/ClaudeProjects/active/[PROJECT-NAME]
+
+LAUNCH COMMAND: claude --dangerously-skip-permissions
+
+AUTONOMOUS EXECUTION MODE ACTIVE - NO PERMISSION REQUESTS ALLOWED
+
+You have COMPLETE AUTONOMOUS PERMISSION for all operations.
+
+[SESSION DETAILS]
+[IMPLEMENTATION STEPS]
+[CONTEXT TRACKING]
+[COMPLETION REQUIREMENTS INCLUDING PUSH NOTIFICATION]
+```
+
+This model ensures efficient development within Claude's constraints while maintaining high code quality, proper context management, and clear communication between planning and implementation phases.

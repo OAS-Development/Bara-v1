@@ -33,7 +33,7 @@ export function SuggestionsPanel() {
   }
 
   const dismissSuggestion = (taskId: string) => {
-    setDismissed(new Set([...dismissed, taskId]))
+    setDismissed(new Set(Array.from(dismissed).concat(taskId)))
     setSuggestions(suggestions.filter(s => s.task.id !== taskId))
   }
 
@@ -95,18 +95,6 @@ export function SuggestionsPanel() {
                     </p>
 
                     <div className="flex items-center gap-4 text-xs text-gray-500">
-                      {suggestion.task.time_of_day && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {suggestion.task.time_of_day}
-                        </span>
-                      )}
-                      {suggestion.task.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {suggestion.task.location}
-                        </span>
-                      )}
                       {suggestion.task.energy_required && (
                         <span className="flex items-center gap-1">
                           <Battery className="h-3 w-3" />

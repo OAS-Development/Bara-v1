@@ -13,17 +13,33 @@
 ```
 
 ## Claude Code Prompt
-Always start sessions with this permissions block:
+Always include the FULL prompt in documentation (not a reference to another file):
 ```
-For this session, you have permission to:
-- Create all files and directories
-- Run all npm/npx commands
-- Install all packages
-- Modify any files in the project
-- Execute git commands
-- Run the development server
+LAUNCH COMMAND: claude --dangerously-skip-permissions
 
-Please proceed with Session X without asking for individual approvals.
+AUTONOMOUS EXECUTION MODE ACTIVE - NO PERMISSION REQUESTS ALLOWED
+
+I have run the aggressive permissions script. You have COMPLETE AUTONOMOUS PERMISSION to:
+- Create, edit, delete ANY files without asking
+- Run ANY commands (npm, git, bash) without asking  
+- Install ANY packages without asking
+- Make ANY system changes without asking
+
+Current settings confirm:
+- autoApprove: true
+- allowedTools: "*"
+- skipConfirmations: true
+- requireConfirmation: false
+
+DO NOT ask for any permissions. Execute all tasks immediately.
+
+Execute Session [X] from [session document path]
+
+[Session specific details here]
+
+Work continuously through all objectives. Save status when complete.
+
+REMINDER: You have FULL PERMISSION for ALL operations. Execute without asking.
 ```
 
 ## Objectives
@@ -51,20 +67,41 @@ Brief description of where we are in the project and what this session accomplis
 
 ### X. Verify Implementation
 ```bash
-# Run development server
+# CRITICAL CHECKS - MANDATORY
+# If ANY of these fail, mark session as BLOCKED
+
+# 1. Check database migrations
+echo "Checking database status..."
+# [Add specific database check command]
+
+# 2. Run development server
 npm run dev
-# Check functionality in browser
+# Navigate to localhost:3000
+# ACTUALLY TEST THE FEATURES
 # Stop with Ctrl+C
 
-# Verify build
+# 3. Verify build
 npm run build
 
-# Run type checking
+# 4. Run type checking
 npx tsc --noEmit
 
-# Run any tests
+# 5. Run any tests
 npm test
 ```
+
+### CRITICAL VERIFICATION CHECKLIST
+- [ ] Database migrations applied and verified
+- [ ] App starts without errors
+- [ ] Features work when actually clicked/used
+- [ ] Data saves and persists correctly
+- [ ] No console errors during testing
+- [ ] Build completes successfully
+
+**🚨 IF ANY CRITICAL CHECK FAILS:**
+1. Mark session as `BLOCKED - [ISSUE TYPE]`
+2. Document exact failure in report
+3. Do NOT proceed to next session
 
 ### X+1. Manual Testing Checklist
 - [ ] Test feature 1 works as expected
@@ -99,8 +136,26 @@ git push origin main
 - [ ] All manual tests pass
 - [ ] Code committed and pushed to GitHub
 
-## Session Completion Report
-After completing all steps and verification, provide this report:
+## Context Window Monitoring
+**IMPORTANT**: Report context usage at these checkpoints:
+- After 30 minutes: "Context: X% remaining"
+- After 60 minutes: "Context: X% remaining"
+- If <15% remaining: STOP IMMEDIATELY and report
+- At session end: Report final % in status
+
+## Session Completion
+After completing all steps and verification:
+
+1. **Notify completion** (for user awareness):
+   ```bash
+   # Play notification sound and show message
+   ./notify-complete.sh "Session $SESSION_NUMBER Complete!"
+   
+   # Or use Node.js notifier
+   npx tsx -e "import {SessionNotifier} from './src/lib/session-notifier'; SessionNotifier.notifyComplete($SESSION_NUMBER)"
+   ```
+
+2. **Provide this report**:
 
 ```json
 {
@@ -112,6 +167,15 @@ After completing all steps and verification, provide this report:
   "blockers": [
     // List any issues encountered
   ],
+  "contextMetrics": {
+    "startContext": "100%",
+    "endContext": "X%",
+    "contextUsed": "X%",
+    "autoCompactTriggered": false,
+    "recommendation": "Session size was [optimal|too large|too small]"
+  },
+  "filesCreated": NUMBER,
+  "linesOfCode": NUMBER,
   "nextSession": NUMBER + 1,
   "notes": "Any important context for next session"
 }

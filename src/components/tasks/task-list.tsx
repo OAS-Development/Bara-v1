@@ -1,12 +1,15 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Check, Circle, Folder, Calendar, AlertCircle } from 'lucide-react'
+import { motion, AnimatePresence, PanInfo } from 'framer-motion'
 import { useTaskStore } from '@/stores/task-store'
 import { useProjectStore } from '@/stores/project-store'
 import { useTagStore } from '@/stores/tag-store'
 import { TagChip } from '@/components/tags/tag-chip'
+import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { listItem, stagger, touchTarget } from '@/lib/animations'
 
 export function TaskList() {
   const { tasks, isLoading, selectedTaskId, fetchTasks, toggleTask, selectTask } = useTaskStore()
@@ -20,11 +23,7 @@ export function TaskList() {
   }, [fetchTasks, fetchProjects, fetchTags])
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-500">Loading tasks...</p>
-      </div>
-    )
+    return <TaskListSkeleton />
   }
 
   if (tasks.length === 0) {
@@ -37,35 +36,60 @@ export function TaskList() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      {tasks.map((task) => {
-        const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status === 'active'
-        const isDueToday = task.due_date && 
-          new Date(task.due_date).toDateString() === new Date().toDateString()
-        
-        return (
-          <div
-            key={task.id}
-            onClick={() => selectTask(task.id)}
-            className={cn(
-              'flex items-start gap-3 px-4 py-3 border-b border-gray-800 cursor-pointer hover:bg-gray-800/50',
-              selectedTaskId === task.id && 'bg-gray-800',
-              isOverdue && 'bg-red-950/20'
-            )}
-          >
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              toggleTask(task.id)
-            }}
-            className="mt-0.5 flex-shrink-0"
-          >
-            {task.status === 'completed' ? (
-              <Check className="w-5 h-5 text-blue-500" />
-            ) : (
-              <Circle className="w-5 h-5 text-gray-600 hover:text-gray-400" />
-            )}
-          </button>
+    <motion.div 
+      className="flex-1 overflow-y-auto"
+      variants={stagger}
+      initial="initial"
+      animate="animate"
+    >
+      <AnimatePresence mode="popLayout">
+        {tasks.map((task, index) => {
+          const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status === 'active'
+          const isDueToday = task.due_date && 
+            new Date(task.due_date).toDateString() === new Date().toDateString()
+          
+          return (
+            <motion.div
+              key={task.id}
+              layout
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={listItem}
+              custom={index}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+                if (info.offset.x > 100) {
+                  toggleTask(task.id)
+                }
+              }}
+              onClick={() => selectTask(task.id)}
+              className={cn(
+                'flex items-start gap-3 px-4 py-3 border-b border-gray-800 cursor-pointer hover:bg-gray-800/50',
+                'touch-manipulation', // Optimizes touch handling
+                selectedTaskId === task.id && 'bg-gray-800',
+                isOverdue && 'bg-red-950/20'
+              )}
+            >
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleTask(task.id)
+              }}
+              className={cn(
+                "mt-0.5 flex-shrink-0",
+                touchTarget,
+                "flex items-center justify-center"
+              )}
+            >
+              {task.status === 'completed' ? (
+                <Check className="w-5 h-5 text-blue-500" />
+              ) : (
+                <Circle className="w-5 h-5 text-gray-600 hover:text-gray-400" />
+              )}
+            </button>
           
           <div className="flex-1 min-w-0">
             <h3 className={cn(
@@ -119,9 +143,10 @@ export function TaskList() {
               )}
             </div>
           </div>
-        </div>
-        )
-      })}
-    </div>
+          </motion.div>
+          )
+        })}
+      </AnimatePresence>
+    </motion.div>
   )
 }

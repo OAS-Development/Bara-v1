@@ -1,5 +1,11 @@
 # Bara-v1
 
+## Launch Command (MANDATORY)
+```bash
+claude --dangerously-skip-permissions
+```
+**This is required for ALL sessions - enables autonomous execution without permission prompts**
+
 ## Description
 Personal productivity suite - a comprehensive application for managing tasks, notes, time tracking, and personal organization
 

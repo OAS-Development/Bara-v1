@@ -1,0 +1,61 @@
+LAUNCH COMMAND: claude --dangerously-skip-permissions
+
+CRITICAL FIXES NEEDED - Session 4 Issues
+
+Two critical problems have been identified:
+
+1. **UI BUG**: Text fields have white text on white background - completely unreadable!
+2. **TESTING**: Manual testing is inefficient - need automated tests
+
+Please fix these issues:
+
+## Part 1: Fix the White-on-White Text Issue
+
+1. Check all input fields, textareas, and form controls
+2. The issue is likely in the CSS/Tailwind classes
+3. Common fixes:
+   - Add `text-gray-900` or `text-black` to input classes
+   - Check if dark mode is interfering
+   - Verify the global CSS isn't overriding text colors
+4. Test the fix in:
+   - Task input fields
+   - Project forms
+   - Tag creation
+   - All other text inputs
+
+## Part 2: Create Automated Tests for Session 4
+
+Create `src/tests/session-4-integration.test.ts`:
+
+```typescript
+// Automated test suite for all Session 4 features
+// Should test:
+// - Projects CRUD
+// - Tags CRUD  
+// - Date filtering
+// - Perspectives
+// - Reviews
+// - Import UI
+// - Data persistence
+```
+
+Also create a test runner script that:
+1. Uses Playwright or Cypress for browser automation
+2. Automatically clicks through all features
+3. Verifies data is saved correctly
+4. Generates a test report
+5. Can be run with: `npm run test:session4`
+
+## Part 3: Quick Manual Verification
+
+After fixing the text issue, quickly verify:
+1. Can you read text in all input fields?
+2. Do the automated tests pass?
+
+## Success Criteria
+- [ ] All text is readable (not white-on-white)
+- [ ] Automated test suite created
+- [ ] Tests can be run with single command
+- [ ] Test report shows what passes/fails
+
+This will make Session 4 verification much more efficient and catch the UI bug that's blocking usability.

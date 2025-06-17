@@ -6,7 +6,6 @@ import { HelpCircle, Calendar, MapPin, Clock, Battery } from 'lucide-react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { LocationPicker } from '@/components/location/location-picker'
 import { DatePicker } from '@/components/dates/date-picker'
-import { TimeOfDay } from '@/lib/context/time-rules'
 import { EnergyLevel } from '@/stores/energy-store'
 
 interface AmbiguityDialogProps {
@@ -88,9 +87,9 @@ export function AmbiguityDialog({ task, onResolve, onCancel }: AmbiguityDialogPr
               Select a location for &ldquo;{resolvedTask.title}&rdquo;
             </p>
             <LocationPicker
-              value={resolvedTask.location || undefined}
-              onChange={(location) => setResolvedTask({ ...resolvedTask, location: location || undefined })}
-              placeholder="Any location"
+              selectedLocationId={resolvedTask.location || null}
+              onSelect={(locationId) => setResolvedTask({ ...resolvedTask, location: locationId || undefined })}
+              showNone={true}
             />
           </div>
         )
@@ -106,7 +105,7 @@ export function AmbiguityDialog({ task, onResolve, onCancel }: AmbiguityDialogPr
               When is the best time to work on &ldquo;{resolvedTask.title}&rdquo;?
             </p>
             <div className="grid grid-cols-2 gap-3">
-              {(['morning', 'afternoon', 'evening', 'night'] as TimeOfDay[]).map((time) => (
+              {(['morning', 'afternoon', 'evening', 'night'] as const).map((time) => (
                 <button
                   key={time}
                   onClick={() => setResolvedTask({ ...resolvedTask, timeOfDay: time })}

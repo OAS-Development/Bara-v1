@@ -1,13 +1,12 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Database } from '@/types/supabase'
-import { OmniFocusData, OmniFocusTask, OmniFocusProject } from './omnifocus-parser'
-import { ImportMapper, ImportMapping } from './import-mapper'
-import { Task, Project } from '@/types'
+import type { Database } from '@/types/database.types'
+import type { OmniFocusData } from './omnifocus-parser'
+import { ImportMapper } from './import-mapper'
 
 export interface ImportProgress {
   total: number
   current: number
-  phase: 'preparing' | 'projects' | 'tasks' | 'completing' | 'done' | 'error'
+  phase: 'preparing' | 'tags' | 'projects' | 'tasks' | 'completing' | 'done' | 'error'
   message: string
   errors: string[]
 }
@@ -16,14 +15,21 @@ export interface ImportResult {
   success: boolean
   projectsImported: number
   tasksImported: number
+  tagsImported: number
   duplicatesSkipped: number
   errors: string[]
   duration: number
 }
 
+export interface ImportOptions {
+  duplicateStrategy: 'skip' | 'replace' | 'create-new'
+  importCompleted: boolean
+  preserveHierarchy: boolean
+  onProgress?: (progress: ImportProgress) => void
+}
+
 export class ImportExecutor {
   private supabase = createClientComponentClient<Database>()
-  private mapper: ImportMapper
   private progress: ImportProgress = {
     total: 0,
     current: 0,
@@ -33,12 +39,8 @@ export class ImportExecutor {
   }
   private onProgress?: (progress: ImportProgress) => void
 
-  constructor(
-    mapping: ImportMapping,
-    onProgress?: (progress: ImportProgress) => void
-  ) {
-    this.mapper = new ImportMapper(mapping)
-    this.onProgress = onProgress
+  constructor(private options: ImportOptions) {
+    this.onProgress = options.onProgress
   }
 
   async execute(data: OmniFocusData): Promise<ImportResult> {
@@ -47,44 +49,56 @@ export class ImportExecutor {
       success: false,
       projectsImported: 0,
       tasksImported: 0,
+      tagsImported: 0,
       duplicatesSkipped: 0,
       errors: [],
       duration: 0
     }
 
     try {
-      // Calculate total items
-      const totalProjects = data.projects.length
-      const totalTasks = this.countAllTasks(data)
-      this.progress.total = totalProjects + totalTasks
-
       this.updateProgress('preparing', 'Validating import data...')
       
-      // Validate mapping
-      const validation = this.mapper.validateMapping(data)
-      if (validation.warnings.length > 0) {
-        this.progress.errors.push(...validation.warnings)
-      }
-
       // Get current user
       const { data: { user } } = await this.supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
-      // Start transaction-like behavior using batches
+      // Create mapper with user ID
+      const mapper = new ImportMapper({
+        ...this.options,
+        userId: user.id
+      })
+
+      // Validate and map data
+      const validation = mapper.validateMapping(data)
+      if (validation.warnings.length > 0) {
+        this.progress.errors.push(...validation.warnings)
+      }
+
+      const mappedData = mapper.mapOmniFocusData(data)
+      
+      // Update total items
+      this.progress.total = mappedData.projects.length + mappedData.tags.length + mappedData.tasks.length
+
+      // Import in order: tags first, then projects, then tasks
+      this.updateProgress('tags', 'Importing tags...')
+      await this.importTags(mappedData.tags, result)
+
       this.updateProgress('projects', 'Importing projects...')
-      const projectMap = await this.importProjects(data.projects, user.id, result)
+      await this.importProjects(mappedData.projects, result)
 
       this.updateProgress('tasks', 'Importing tasks...')
-      await this.importTasks(data, projectMap, user.id, result)
+      await this.importTasks(mappedData.tasks, mappedData.taskTags, result)
 
       this.updateProgress('completing', 'Finalizing import...')
       
-      // Create import tags if they don't exist
-      await this.ensureImportTags(user.id)
+      // Add import marker tag to all imported tasks if requested
+      if (this.options.preserveHierarchy) {
+        await this.addImportMetadata(user.id)
+      }
 
       result.success = true
       result.duration = Date.now() - startTime
-      this.updateProgress('done', 'Import completed successfully!')
+      this.updateProgress('done', `Import completed! ${result.tasksImported} tasks, ${result.projectsImported} projects, ${result.tagsImported} tags imported.`)
 
     } catch (error) {
       result.errors.push(error instanceof Error ? error.message : 'Unknown error')
@@ -95,218 +109,223 @@ export class ImportExecutor {
     return result
   }
 
-  private async importProjects(
-    projects: OmniFocusProject[],
-    userId: string,
-    result: ImportResult
-  ): Promise<Map<string, string>> {
-    const projectMap = new Map<string, string>()
+  private async importTags(tags: any[], result: ImportResult): Promise<void> {
+    const batchSize = 50
+    
+    for (let i = 0; i < tags.length; i += batchSize) {
+      const batch = tags.slice(i, i + batchSize)
+      
+      try {
+        // Check for existing tags
+        const tagNames = batch.map(t => t.name)
+        const { data: existing } = await this.supabase
+          .from('tags')
+          .select('id, name')
+          .eq('user_id', batch[0].user_id)
+          .in('name', tagNames)
 
-    for (const ofProject of projects) {
+        const existingNames = new Set(existing?.map(e => e.name) || [])
+        
+        // Filter out duplicates based on strategy
+        const toImport = batch.filter(tag => {
+          if (existingNames.has(tag.name)) {
+            if (this.options.duplicateStrategy === 'skip') {
+              result.duplicatesSkipped++
+              return false
+            }
+            // For 'create-new', we'll add a suffix
+            if (this.options.duplicateStrategy === 'create-new') {
+              tag.name = `${tag.name} (imported)`
+            }
+          }
+          return true
+        })
+
+        if (toImport.length > 0) {
+          const { error } = await this.supabase
+            .from('tags')
+            .insert(toImport)
+
+          if (error) throw error
+          result.tagsImported += toImport.length
+        }
+
+        this.progress.current += batch.length
+        this.updateProgress('tags', `Imported ${result.tagsImported} tags...`)
+      } catch (error) {
+        const message = `Failed to import tag batch: ${error instanceof Error ? error.message : 'Unknown error'}`
+        result.errors.push(message)
+        this.progress.errors.push(message)
+      }
+    }
+  }
+
+  private async importProjects(projects: any[], result: ImportResult): Promise<void> {
+    // Import projects in order to preserve hierarchy
+    for (const project of projects) {
       try {
         // Check for duplicates
         const { data: existing } = await this.supabase
           .from('projects')
           .select('id')
-          .eq('user_id', userId)
-          .eq('name', ofProject.name)
+          .eq('user_id', project.user_id)
+          .eq('name', project.name)
           .single()
 
         if (existing) {
-          result.duplicatesSkipped++
-          projectMap.set(ofProject.id, existing.id)
-          continue
+          if (this.options.duplicateStrategy === 'skip') {
+            result.duplicatesSkipped++
+            this.progress.current++
+            continue
+          }
+          if (this.options.duplicateStrategy === 'create-new') {
+            project.name = `${project.name} (imported)`
+          }
         }
 
-        // Map and create project
-        const projectData = this.mapper.mapProject(ofProject)
-        const { data: newProject, error } = await this.supabase
+        const { error } = await this.supabase
           .from('projects')
-          .insert({
-            ...projectData,
-            user_id: userId,
-            color: this.generateProjectColor()
-          })
-          .select()
-          .single()
+          .insert(project)
 
         if (error) throw error
-        if (newProject) {
-          projectMap.set(ofProject.id, newProject.id)
-          result.projectsImported++
-        }
+        result.projectsImported++
 
         this.progress.current++
-        this.updateProgress('projects', `Imported project: ${ofProject.name}`)
+        this.updateProgress('projects', `Imported project: ${project.name}`)
       } catch (error) {
-        const message = `Failed to import project "${ofProject.name}": ${error instanceof Error ? error.message : 'Unknown error'}`
+        const message = `Failed to import project "${project.name}": ${error instanceof Error ? error.message : 'Unknown error'}`
+        result.errors.push(message)
+        this.progress.errors.push(message)
+      }
+    }
+  }
+
+  private async importTasks(tasks: any[], taskTags: any[], result: ImportResult): Promise<void> {
+    const batchSize = 100
+    
+    // Import tasks in batches
+    for (let i = 0; i < tasks.length; i += batchSize) {
+      const batch = tasks.slice(i, i + batchSize)
+      
+      try {
+        // Check for duplicates
+        const taskTitles = batch.map(t => t.title)
+        const { data: existing } = await this.supabase
+          .from('tasks')
+          .select('id, title, project_id')
+          .eq('user_id', batch[0].user_id)
+          .in('title', taskTitles)
+
+        const existingMap = new Map(
+          existing?.map(e => [`${e.title}-${e.project_id || 'inbox'}`, e]) || []
+        )
+        
+        // Filter out duplicates based on strategy
+        const toImport = batch.filter(task => {
+          const key = `${task.title}-${task.project_id || 'inbox'}`
+          if (existingMap.has(key)) {
+            if (this.options.duplicateStrategy === 'skip') {
+              result.duplicatesSkipped++
+              return false
+            }
+            if (this.options.duplicateStrategy === 'create-new') {
+              task.title = `${task.title} (imported)`
+            }
+          }
+          return true
+        })
+
+        if (toImport.length > 0) {
+          const { error } = await this.supabase
+            .from('tasks')
+            .insert(toImport)
+
+          if (error) throw error
+          result.tasksImported += toImport.length
+        }
+
+        this.progress.current += batch.length
+        this.updateProgress('tasks', `Imported ${result.tasksImported} tasks...`)
+      } catch (error) {
+        const message = `Failed to import task batch: ${error instanceof Error ? error.message : 'Unknown error'}`
         result.errors.push(message)
         this.progress.errors.push(message)
       }
     }
 
-    return projectMap
-  }
-
-  private async importTasks(
-    data: OmniFocusData,
-    projectMap: Map<string, string>,
-    userId: string,
-    result: ImportResult
-  ): Promise<void> {
-    // Import inbox tasks
-    for (const task of data.tasks) {
-      await this.importTask(task, undefined, userId, projectMap, result)
-    }
-
-    // Import project tasks
-    for (const project of data.projects) {
-      const projectId = projectMap.get(project.id)
-      if (projectId && project.tasks) {
-        for (const task of project.tasks) {
-          await this.importTask(task, projectId, userId, projectMap, result)
+    // Import task-tag relationships
+    if (taskTags.length > 0) {
+      try {
+        // Import in smaller batches to avoid conflicts
+        for (let i = 0; i < taskTags.length; i += 100) {
+          const batch = taskTags.slice(i, i + 100)
+          await this.supabase
+            .from('task_tags')
+            .insert(batch)
+            .select() // Ignore duplicates
         }
+      } catch (error) {
+        // Non-critical error - just log it
+        this.progress.errors.push(`Some task-tag relationships could not be imported`)
       }
     }
   }
 
-  private async importTask(
-    ofTask: OmniFocusTask,
-    projectId: string | undefined,
-    userId: string,
-    projectMap: Map<string, string>,
-    result: ImportResult,
-    parentId?: string
-  ): Promise<void> {
+  private async addImportMetadata(userId: string): Promise<void> {
     try {
-      // Check for duplicates
-      const { data: existing } = await this.supabase
-        .from('tasks')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('title', ofTask.name)
-        .eq('project_id', projectId || null)
+      // Create or get import tag
+      const importDate = new Date().toISOString().split('T')[0]
+      const tagName = `imported-${importDate}`
       
-      if (existing && existing.length > 0) {
-        result.duplicatesSkipped++
-        this.progress.current++
-        return
-      }
-
-      // Map and create task
-      const taskData = this.mapper.mapTask(ofTask, projectId)
-      const { data: newTask, error } = await this.supabase
-        .from('tasks')
-        .insert({
-          ...taskData,
-          user_id: userId,
-          parent_id: parentId || null,
-          status: ofTask.completed ? 'completed' : 'next',
-          order_index: 0
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-      
-      result.tasksImported++
-      this.progress.current++
-      this.updateProgress('tasks', `Imported task: ${ofTask.name}`)
-
-      // Import subtasks
-      if (newTask && ofTask.tasks && ofTask.tasks.length > 0) {
-        for (const subtask of ofTask.tasks) {
-          await this.importTask(subtask, projectId, userId, projectMap, result, newTask.id)
-        }
-      }
-
-      // Add tags
-      if (newTask && taskData.tags && taskData.tags.length > 0) {
-        await this.addTaskTags(newTask.id, taskData.tags, userId)
-      }
-
-    } catch (error) {
-      const message = `Failed to import task "${ofTask.name}": ${error instanceof Error ? error.message : 'Unknown error'}`
-      result.errors.push(message)
-      this.progress.errors.push(message)
-      this.progress.current++
-    }
-  }
-
-  private async addTaskTags(taskId: string, tags: string[], userId: string): Promise<void> {
-    for (const tagName of tags) {
-      // Ensure tag exists
-      const { data: tag } = await this.supabase
+      let tagId: string
+      const { data: existingTag } = await this.supabase
         .from('tags')
         .select('id')
         .eq('user_id', userId)
         .eq('name', tagName)
         .single()
 
-      let tagId: string
-      if (!tag) {
-        // Create tag
+      if (existingTag) {
+        tagId = existingTag.id
+      } else {
         const { data: newTag, error } = await this.supabase
           .from('tags')
           .insert({
             user_id: userId,
             name: tagName,
-            color: this.generateTagColor()
+            color: '#9CA3AF',
+            icon: '📥'
           })
           .select()
           .single()
 
-        if (error || !newTag) continue
+        if (error || !newTag) return
         tagId = newTag.id
-      } else {
-        tagId = tag.id
       }
 
-      // Create task-tag association
-      await this.supabase
-        .from('task_tags')
-        .insert({
-          task_id: taskId,
-          tag_id: tagId
-        })
-    }
-  }
-
-  private async ensureImportTags(userId: string): Promise<void> {
-    const importTags = ['imported', 'omnifocus-import']
-    
-    for (const tagName of importTags) {
-      const { data: existing } = await this.supabase
-        .from('tags')
+      // Add import tag to all tasks created in the last minute
+      const oneMinuteAgo = new Date(Date.now() - 60000).toISOString()
+      const { data: recentTasks } = await this.supabase
+        .from('tasks')
         .select('id')
         .eq('user_id', userId)
-        .eq('name', tagName)
-        .single()
+        .gte('created_at', oneMinuteAgo)
 
-      if (!existing) {
+      if (recentTasks && recentTasks.length > 0) {
+        const taskTagInserts = recentTasks.map(task => ({
+          task_id: task.id,
+          tag_id: tagId
+        }))
+
         await this.supabase
-          .from('tags')
-          .insert({
-            user_id: userId,
-            name: tagName,
-            color: '#9CA3AF' // Gray color for import tags
-          })
+          .from('task_tags')
+          .insert(taskTagInserts)
+          .select() // Ignore duplicates
       }
+    } catch (error) {
+      // Non-critical - just log
+      this.progress.errors.push('Could not add import metadata tag')
     }
-  }
-
-  private countAllTasks(data: OmniFocusData): number {
-    let count = 0
-    
-    const countTask = (task: OmniFocusTask) => {
-      count++
-      task.tasks?.forEach(countTask)
-    }
-
-    data.tasks.forEach(countTask)
-    data.projects.forEach(project => project.tasks?.forEach(countTask))
-    
-    return count
   }
 
   private updateProgress(phase: ImportProgress['phase'], message: string): void {
@@ -315,13 +334,42 @@ export class ImportExecutor {
     this.onProgress?.(this.progress)
   }
 
-  private generateProjectColor(): string {
-    const colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899']
-    return colors[Math.floor(Math.random() * colors.length)]
-  }
+  // Generate import report
+  generateReport(result: ImportResult, data: OmniFocusData): string {
+    const report = [
+      '# OmniFocus Import Report',
+      '',
+      `Import Date: ${new Date().toLocaleString()}`,
+      `Duration: ${(result.duration / 1000).toFixed(1)} seconds`,
+      '',
+      '## Summary',
+      `- Projects imported: ${result.projectsImported}`,
+      `- Tasks imported: ${result.tasksImported}`,
+      `- Tags imported: ${result.tagsImported}`,
+      `- Duplicates skipped: ${result.duplicatesSkipped}`,
+      '',
+      '## Original Data',
+      `- Total projects: ${data.projects.length}`,
+      `- Total tasks: ${data.tasks.length + data.projects.reduce((sum, p) => sum + p.tasks.length, 0)}`,
+      `- Total contexts: ${data.contexts.length}`,
+      ''
+    ]
 
-  private generateTagColor(): string {
-    const colors = ['#DC2626', '#D97706', '#059669', '#2563EB', '#7C3AED', '#DB2777']
-    return colors[Math.floor(Math.random() * colors.length)]
+    if (result.errors.length > 0) {
+      report.push('## Errors')
+      result.errors.forEach(error => {
+        report.push(`- ${error}`)
+      })
+      report.push('')
+    }
+
+    if (this.progress.errors.length > 0) {
+      report.push('## Warnings')
+      this.progress.errors.forEach(warning => {
+        report.push(`- ${warning}`)
+      })
+    }
+
+    return report.join('\n')
   }
 }

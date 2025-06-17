@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { DashboardClient } from '@/components/layout/dashboard-client'
+import { ErrorBoundary } from '@/components/error-boundary'
 
 export default async function DashboardLayout({
   children
@@ -14,5 +15,9 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  return <DashboardClient>{children}</DashboardClient>
+  return (
+    <ErrorBoundary>
+      <DashboardClient>{children}</DashboardClient>
+    </ErrorBoundary>
+  )
 }

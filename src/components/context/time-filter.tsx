@@ -1,6 +1,8 @@
 'use client'
 
-import { TimeOfDay, TimeRules } from '@/lib/context/time-rules'
+import { TimeRules } from '@/lib/context/time-rules'
+
+type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night'
 import { Clock, Sunrise, Sun, Sunset, Moon } from 'lucide-react'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 

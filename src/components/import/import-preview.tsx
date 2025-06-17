@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { OmniFocusParser, OmniFocusData } from '@/lib/import/omnifocus-parser'
-import { ImportMapper, ImportMapping, defaultMapping } from '@/lib/import/import-mapper'
-import { ImportExecutor, ImportProgress, ImportResult } from '@/lib/import/import-executor'
+import { ImportMapper } from '@/lib/import/import-mapper'
+import { ImportExecutor, ImportProgress, ImportResult, ImportOptions } from '@/lib/import/import-executor'
 import { ImportMappingConfig } from './import-mapping-config'
-import { ImportProgressDisplay } from './import-progress'
+import { ImportProgress as ImportProgressDisplay } from './import-progress'
 import { ImportReport } from './import-report'
-import { FileText, Folder, Tag, CheckCircle, AlertCircle, Settings } from 'lucide-react'
+import { FileText, Folder, Tag, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface ImportPreviewProps {
   file: File
@@ -15,7 +15,7 @@ interface ImportPreviewProps {
   onCancel: () => void
 }
 
-type ImportPhase = 'parsing' | 'preview' | 'mapping' | 'importing' | 'complete'
+type ImportPhase = 'parsing' | 'preview' | 'importing' | 'complete'
 
 export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps) {
   const [phase, setPhase] = useState<ImportPhase>('parsing')
@@ -23,11 +23,15 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
   const [error, setError] = useState<string | null>(null)
   const [parsedData, setParsedData] = useState<OmniFocusData | null>(null)
   const [statistics, setStatistics] = useState<any>(null)
-  const [mapping, setMapping] = useState<ImportMapping>(defaultMapping)
+  const [importOptions, setImportOptions] = useState<ImportOptions>({
+    duplicateStrategy: 'skip',
+    importCompleted: false,
+    preserveHierarchy: true
+  })
   const [validation, setValidation] = useState<any>(null)
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null)
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
-  const [showMapping, setShowMapping] = useState(false)
+  const [importReport, setImportReport] = useState<string>('')
 
   useEffect(() => {
     parseFile()
@@ -46,8 +50,9 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
       setParsedData(data)
       setStatistics(stats)
       
-      // Validate with default mapping
-      const mapper = new ImportMapper(mapping)
+      // Validate with default options
+      const { data: { user } } = await (await import('@supabase/auth-helpers-nextjs')).createClientComponentClient().auth.getUser()
+      const mapper = new ImportMapper({ ...importOptions, userId: user?.id || '' })
       const validationResult = mapper.validateMapping(data)
       setValidation(validationResult)
       
@@ -59,12 +64,17 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
     }
   }
 
-  const handleMappingChange = (newMapping: ImportMapping) => {
-    setMapping(newMapping)
+  const handleOptionsChange = (newOptions: ImportOptions) => {
+    setImportOptions(newOptions)
     if (parsedData) {
-      const mapper = new ImportMapper(newMapping)
-      const validationResult = mapper.validateMapping(parsedData)
-      setValidation(validationResult)
+      // Re-validate with new options
+      const validateAsync = async () => {
+        const { data: { user } } = await (await import('@supabase/auth-helpers-nextjs')).createClientComponentClient().auth.getUser()
+        const mapper = new ImportMapper({ ...newOptions, userId: user?.id || '' })
+        const validationResult = mapper.validateMapping(parsedData)
+        setValidation(validationResult)
+      }
+      validateAsync()
     }
   }
 
@@ -75,14 +85,36 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
     setError(null)
 
     try {
-      const executor = new ImportExecutor(mapping, setImportProgress)
+      const executor = new ImportExecutor({
+        ...importOptions,
+        onProgress: setImportProgress
+      })
       const result = await executor.execute(parsedData)
+      const report = executor.generateReport(result, parsedData)
+      
       setImportResult(result)
+      setImportReport(report)
       setPhase('complete')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Import failed')
       setPhase('preview')
     }
+  }
+
+  const handleDownloadReport = () => {
+    const blob = new Blob([importReport], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `omnifocus-import-${new Date().toISOString().split('T')[0]}.md`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleViewImported = () => {
+    window.location.href = '/inbox'
   }
 
   if (phase === 'parsing' && loading) {
@@ -117,8 +149,13 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
   if (phase === 'importing' && importProgress) {
     return (
       <div className="p-8">
-        <h2 className="text-xl font-semibold mb-6">Importing Data</h2>
+        <h2 className="text-xl font-semibold mb-6">Importing Your Data</h2>
         <ImportProgressDisplay progress={importProgress} />
+        {error && (
+          <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
       </div>
     )
   }
@@ -126,7 +163,14 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
   if (phase === 'complete' && importResult) {
     return (
       <div className="p-8">
-        <ImportReport result={importResult} onDone={onCancel} />
+        <h2 className="text-xl font-semibold mb-6">Import Complete</h2>
+        <ImportReport 
+          result={importResult}
+          report={importReport}
+          onDownload={handleDownloadReport}
+          onClose={onCancel}
+          onViewImported={handleViewImported}
+        />
       </div>
     )
   }
@@ -136,16 +180,7 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
   return (
     <div className="space-y-6">
       <div className="bg-gray-50 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Import Preview</h3>
-          <button
-            onClick={() => setShowMapping(!showMapping)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Settings className="h-4 w-4" />
-            Configure Mapping
-          </button>
-        </div>
+        <h3 className="text-lg font-semibold mb-4">Import Preview</h3>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg p-4 text-center">
@@ -176,43 +211,20 @@ export function ImportPreview({ file, onProceed, onCancel }: ImportPreviewProps)
         </div>
       </div>
 
-      {showMapping && validation && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <ImportMappingConfig
-            mapping={mapping}
-            unmappedContexts={validation.unmappedContexts}
-            onChange={handleMappingChange}
-          />
-        </div>
+      {validation && (
+        <ImportMappingConfig
+          unmappedContexts={validation.unmappedContexts}
+          duplicateTasks={validation.duplicateTasks}
+          warnings={validation.warnings}
+          onConfigChange={handleOptionsChange}
+        />
       )}
-
-      {validation && validation.warnings.length > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h4 className="font-medium text-yellow-900 mb-2">Import Warnings</h4>
-          <ul className="text-sm text-yellow-800 space-y-1">
-            {validation.warnings.map((warning: string, index: number) => (
-              <li key={index}>• {warning}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <h4 className="font-medium text-yellow-900 mb-2">Import Notes</h4>
-        <ul className="text-sm text-yellow-800 space-y-1">
-          <li>• OmniFocus contexts will be converted to tags</li>
-          <li>• Duplicate items will be automatically skipped</li>
-          <li>• Completed items will be imported but marked as completed</li>
-          <li>• Project hierarchy and types will be preserved</li>
-          <li>• All items will be tagged with &ldquo;omnifocus-import&rdquo;</li>
-        </ul>
-      </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h4 className="font-medium text-blue-900 mb-3">Ready to Import?</h4>
         <p className="text-sm text-blue-800 mb-4">
           This will create {statistics.totalProjects} projects and {statistics.totalTasks} tasks in your Bara workspace.
-          The import process may take a few moments.
+          The import process may take a few moments depending on the size of your archive.
         </p>
         <div className="flex gap-3">
           <button

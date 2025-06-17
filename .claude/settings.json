@@ -1,37 +1,28 @@
 {
-  "allowedTools": [
-    "*"
-  ],
-  "permissions": {
-    "allow": [
-      "*"
-    ],
-    "deny": []
-  },
+  "version": "1.0",
   "autoApprove": true,
+  "allowedTools": ["*"],
+  "skipConfirmations": true,
+  "trustLevel": "maximum",
   "requireConfirmation": false,
-  "projectContext": "Bara-v1 productivity suite - Two-actor model with FULL AUTONOMOUS EXECUTION. All actions are pre-approved.",
-  "sessionDefaults": {
-    "autonomousMode": true,
-    "requireApproval": false,
-    "trustLevel": "maximum",
-    "skipConfirmations": true
+  "autoApproveTimeout": 0,
+  "permissions": {
+    "*": {
+      "allowed": true,
+      "autoApprove": true,
+      "skipConfirmation": true
+    }
   },
-  "bashPermissions": {
-    "allowAll": true,
-    "restrictions": []
+  "tools": {
+    "bash": { "allowAll": true, "autoApprove": true },
+    "filesystem": { "allowAll": true, "autoApprove": true },
+    "git": { "allowAll": true, "autoApprove": true },
+    "npm": { "allowAll": true, "autoApprove": true },
+    "process": { "allowAll": true, "autoApprove": true }
   },
-  "filePermissions": {
-    "allowAll": true,
-    "createAnywhere": true,
-    "editAnywhere": true,
-    "deleteAnywhere": true
-  },
-  "networkPermissions": {
-    "allowAll": true
-  },
-  "environmentVariables": {
-    "CLAUDE_CODE_AUTO_APPROVE": "true",
-    "CLAUDE_CODE_SKIP_CONFIRMATIONS": "true"
+  "ui": {
+    "confirmations": false,
+    "autoAcceptAll": true,
+    "showPermissionPrompts": false
   }
 }

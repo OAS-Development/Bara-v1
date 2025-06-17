@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Calendar, Flag, Archive, Tag, FolderOpen, CheckCircle } from 'lucide-react'
+import { Home, Calendar, Flag, Archive, Tag, FolderOpen, CheckCircle, Heart, Activity, DollarSign, Target, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -17,6 +17,14 @@ const organize = [
   { name: 'Projects', href: '/projects', icon: FolderOpen },
   { name: 'Tags', href: '/tags', icon: Tag },
   { name: 'Review', href: '/review', icon: CheckCircle },
+]
+
+const life = [
+  { name: 'Life Dashboard', href: '/life', icon: Heart },
+  { name: 'Health', href: '/life/health', icon: Activity },
+  { name: 'Finance', href: '/life/finance', icon: DollarSign },
+  { name: 'Goals', href: '/life/goals', icon: Target },
+  { name: 'Journal', href: '/life/journal', icon: Lock },
 ]
 
 export function Sidebar() {
@@ -72,6 +80,33 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
                     pathname === item.href
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-800'
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  {item.name}
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
+        
+        {/* Life */}
+        <div className="p-2 mt-4">
+          <h2 className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">
+            Life
+          </h2>
+          <nav className="space-y-1">
+            {life.map((item) => {
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm',
+                    pathname === item.href || pathname.startsWith(item.href + '/')
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-300 hover:bg-gray-800'
                   )}

@@ -5,14 +5,14 @@
 ### 1. The Nuclear Reset
 ```bash
 # Kill any running Claude Code instances
-pkill -f claude-code
+pkill -f claude
 
 # Remove ALL settings files
 rm -rf .claude/
 rm ~/.claude.json
 
 # Launch with maximum permissions
-claude-code --allowedTools "*" --autoApprove true --skipConfirmations true
+claude --dangerously-skip-permissions --allowedTools "*" --autoApprove true
 ```
 
 ### 2. In-Session Override Commands
@@ -157,19 +157,19 @@ Run these to see what's actually happening:
 
 1. **Different Claude Code Version**: Try beta/alpha channel
    ```bash
-   claude-code --channel beta
+   claude --dangerously-skip-permissions --channel beta
    ```
 
 2. **Environment Variables**:
    ```bash
    export CLAUDE_AUTO_APPROVE=true
    export CLAUDE_SKIP_CONFIRMATIONS=true
-   claude-code
+   claude --dangerously-skip-permissions
    ```
 
 3. **Direct API Mode** (if available):
    ```bash
-   claude-code --mode direct --no-safety
+   claude --dangerously-skip-permissions --mode direct
    ```
 
 ## 📝 Report Template
@@ -200,7 +200,7 @@ Save as `force-permissions.sh`:
 # The most aggressive permission setup possible
 
 # Kill everything
-pkill -f claude-code
+pkill -f claude
 
 # Clean slate
 rm -rf .claude/
@@ -230,13 +230,10 @@ EOF
 cp .claude/settings.json ~/.claude.json
 
 # Launch with everything
-claude-code \
+claude \
+  --dangerously-skip-permissions \
   --allowedTools "*" \
-  --autoApprove true \
-  --skipConfirmations true \
-  --trustLevel maximum \
-  --no-sandbox \
-  --disable-permissions-check
+  --autoApprove true
 
 echo "If this doesn't work, nothing will!"
 ```
