@@ -51,11 +51,13 @@ Location: `/sessions/session-01-setup.md`
 4. Reports completion status
 
 ### Next Sessions Planned
-- Session 2: Database Schema & RLS
-- Session 3: Layout Components
-- Session 4: Task CRUD Operations
-- Session 5: Keyboard Shortcuts
-- ... (30+ more Sessions)
+- Session 2: Database Schema & Layout Components (90 min DOUBLE SESSION)
+- Session 3: Task System & Keyboard Navigation (90 min)
+- Session 4: Projects & Tags System (90 min)
+- Session 5: Time Management & Views (90 min)
+- ... (18 total double sessions)
+
+**Note: Sessions have been restructured as 90-minute double sessions for efficiency**
 
 ## Key Innovation: Session-Based Development
 

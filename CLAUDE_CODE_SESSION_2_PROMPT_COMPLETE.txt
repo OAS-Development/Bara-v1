@@ -1,0 +1,46 @@
+## Terminal Setup Instructions
+
+First, open a fresh terminal and navigate to the project:
+
+```bash
+cd /Volumes/DevDrive/ClaudeProjects/active/Bara-v1
+./claude-code-aggressive.sh
+```
+
+## Session 2 Execution Instructions
+
+For this session, you have permission to:
+- Create all files and directories
+- Run all npm/npx commands
+- Install all packages
+- Modify any files in the project
+- Execute git commands
+- Run the development server
+- Execute Supabase CLI commands
+- Run database migrations
+
+Please proceed with Session 2 without asking for individual approvals.
+
+I need you to execute Session 2 for the Bara-v1 project. This is a DOUBLE SESSION (90 minutes) combining database and layout work.
+
+The session definition is located at:
+/Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-02-database-layout.md
+
+Please:
+1. Read the entire session document carefully
+2. Execute ALL implementation steps in order
+3. Complete both Part A (Database) and Part B (Layout) 
+4. Run all verification steps as you go
+5. Ensure everything works before the final git push
+6. **IMPORTANT**: Save your completion report to:
+   /Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-02-status.json
+7. Confirm the session is complete and the status file is saved
+
+Important notes:
+- This is a 90-minute double session - complete BOTH parts
+- You'll need the Supabase project ID for type generation (check .env.local or ask if not set)
+- The layout should match the OmniFocus-style dark theme
+- All verification steps are part of implementation
+- Only push to GitHub after all verification passes
+
+The session includes everything from database schema creation through to the complete three-panel layout.

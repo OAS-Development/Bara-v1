@@ -1,0 +1,40 @@
+cd /Volumes/DevDrive/ClaudeProjects/active/Bara-v1
+./claude-code-aggressive.sh
+
+If the aggressive script doesn't work, run regular claude-code and immediately run:
+/permissions add *
+
+Now execute Session 3 for the Bara-v1 project. This is a DOUBLE SESSION (90 minutes) combining Task System and Keyboard Navigation.
+
+For this session, you have permission to:
+- Create all files and directories
+- Run all npm/npx commands
+- Install all packages
+- Modify any files in the project
+- Execute git commands
+- Run the development server
+- Modify keyboard event handlers
+
+Please proceed with Session 3 without asking for individual approvals.
+
+The session definition is located at:
+/Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-03-tasks-keyboard.md
+
+Please:
+1. Read the entire session document carefully
+2. Execute ALL implementation steps in order
+3. Complete both Part A (Task CRUD) and Part B (Keyboard Shortcuts)
+4. Run all verification steps as you go
+5. Ensure everything works before the final git push
+6. **IMPORTANT**: Save your completion report to:
+   /Volumes/DevDrive/ClaudeProjects/active/Bara-v1/sessions/session-03-status.json
+7. Confirm the session is complete and the status file is saved
+
+Important notes:
+- This is a 90-minute double session - complete BOTH parts
+- Focus on making task operations smooth and keyboard shortcuts responsive
+- All verification steps are part of implementation
+- Only push to GitHub after all verification passes
+- The status report MUST be saved as a file, not just displayed
+
+The session includes building the complete task management system with full keyboard control.

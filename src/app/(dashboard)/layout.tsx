@@ -1,8 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { Sidebar } from '@/components/layout/sidebar'
+import { MainContent } from '@/components/layout/main-content'
+import { Inspector } from '@/components/layout/inspector'
 
 export default async function DashboardLayout({
-  children,
+  children
 }: {
   children: React.ReactNode
 }) {
@@ -13,38 +16,22 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  const handleLogout = async () => {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/')
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold">Bara</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">{user.email}</span>
-              <form action={handleLogout}>
-                <button
-                  type="submit"
-                  className="text-sm text-gray-500 hover:text-gray-700"
-                >
-                  Logout
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </nav>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
+    <div className="flex h-screen bg-gray-900 text-gray-100">
+      {/* Sidebar - 240px */}
+      <aside className="w-60 border-r border-gray-800 flex-shrink-0">
+        <Sidebar />
+      </aside>
+      
+      {/* Main Content - Flexible */}
+      <main className="flex-1 flex flex-col min-w-0">
+        <MainContent>{children}</MainContent>
       </main>
+      
+      {/* Inspector - 320px, collapsible */}
+      <aside className="w-80 border-l border-gray-800 flex-shrink-0">
+        <Inspector />
+      </aside>
     </div>
   )
 }

@@ -10,8 +10,9 @@ This project uses a two-actor development model with Session-based implementatio
 
 ### 1. Session-Based Development
 - **NO weekly milestones** - only Sessions
-- Each Session is ~45 minutes
-- Designed to fit within Claude's context window
+- Each Session is **~90 minutes** (UPDATED: doubled from 45)
+- Combines two related feature sets
+- Designed to maximize Claude's context window
 - Prevents auto-compaction issues
 
 ### 2. Actor Responsibilities
@@ -104,14 +105,16 @@ Sessions end when:
 - ✅ Database schema design
 - ✅ UI/UX design in Figma
 - ✅ Feature specifications
-- ✅ Session-based roadmap
+- ✅ Session-based roadmap (18 double sessions)
 - ✅ Session 1 definition ready
+- ✅ Session restructuring to double sessions
 
 ### Ready for Claude Code:
-- 🔲 Session 1: Project Setup & Authentication
-- 🔲 Session 2: Database Schema & RLS
-- 🔲 Session 3: Layout Components
-- ... (30+ Sessions planned)
+- ✅ Session 1: Project Setup & Authentication (COMPLETE)
+- 🔲 Session 2: Database Schema & Layout Components
+- 🔲 Session 3: Task System & Keyboard Navigation  
+- 🔲 Session 4: Projects & Tags System
+- ... (18 total double sessions)
 
 ## Important Notes
 
