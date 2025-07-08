@@ -1,4 +1,11 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
+const nextConfig = {
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bcbbpwarqvaoaczqvdpv.supabase.co',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjYmJwd2FycXZhb2FjenF2ZHB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxMjE5MzUsImV4cCI6MjA2NTY5NzkzNX0.TMrWbxewKvxueoZ86YCGhmJF6L4qNnqUWEPOjtz46uM',
+    OWNER_USER_ID: process.env.OWNER_USER_ID || 'jonathan@onairsystems.org',
+    OWNER_EMAIL: process.env.OWNER_EMAIL || 'jonathan@onairsystems.org'
+  }
+}
 
 module.exports = nextConfig
